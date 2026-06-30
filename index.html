@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字训练</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Noto+Sans+SC:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        button, input {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 400;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 400;
+            overflow: hidden; /* 防止3D标签引起滚动条 */
+            user-select: none; /* 防止选择文字作弊 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes pulse-custom {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .animate-ping {
+            animation: ping 0.5s cubic-bezier(0, 0, 0.2, 1);
+        }
+        
+        .animate-pulse {
+            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .bg-gradient-blue {
+            background: linear-gradient(to bottom right, #eff6ff, #e0e7ff);
+        }
+        
+        .bg-gradient-red {
+            background: linear-gradient(to bottom right, #f9fafb, #e5e7eb); /* 灰白色背景 */
+        }
+        
+        .title {
+            font-size: 3rem;
+            font-weight: 400;
+            color: #4338ca;
+            margin-bottom: 4rem;
+        }
+        
+        .btn {
+            padding: 1rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 400;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+        
+        .btn-secondary {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.75rem 2rem;
+            font-size: 1.125rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #374151;
+        }
+        
+        .card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 20rem;
+            font-size: 1rem;
+            color: #374151;
+        }
+        
+        .card p {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .flex-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 42rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        
+        .stat {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #4338ca;
+        }
+        
+        .stat-value {
+            font-size: 1.875rem;
+        }
+        
+        .word-display {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .pinyin {
+            color: #6b7280;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+        
+        .word {
+            font-size: 3.75rem;
+            font-weight: 400;
+            color: #312e81;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        input[type="text"] {
+            padding: 1rem 1.5rem;
+            font-size: 1.875rem;
+            text-align: center;
+            border: 4px solid #818cf8;
+            border-radius: 0.5rem;
+            outline: none;
+            width: 24rem;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #4338ca;
+        }
+        
+        .survival-input {
+            width: 10rem; /* 缩短宽度 */
+            font-size: 1rem;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #9ca3af; /* 灰色边框，低饱和度 */
+            background: transparent; /* 无填充色 */
+            color: #374151; /* 深灰色文字 */
+        }
+        
+        .survival-input:focus {
+            border-color: #6b7280; /* 聚焦时稍深的灰色 */
+            outline: none;
+        }
+        
+        .ultimate-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin-top: 10rem;
+            font-size: 1.5rem;
+            font-weight: 400;
+            animation: ultimate-glow 1s ease-in-out infinite alternate;
+            z-index: 20;
+            display: none;
+            text-align: center;
+        }
+        
+        /* 不同大招的颜色 */
+        .ultimate-shield {
+            color: #22c55e; /* 绿色 - 护盾 */
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.8), 0 0 20px rgba(34, 197, 94, 0.6);
+        }
+        
+        .ultimate-freeze {
+            color: #60a5fa; /* 冰蓝色 - 冻结 */
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.8), 0 0 20px rgba(96, 165, 250, 0.6);
+        }
+        
+        .ultimate-firstaid {
+            color: #ef4444; /* 红色 - 医疗包 */
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+        
+        .ultimate-revive {
+            color: #fbbf24; /* 金色 - 复活甲 */
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.6);
+        }
+        
+        .ultimate-teleport {
+            color: #a78bfa; /* 紫色 - 物换星移 */
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.8), 0 0 20px rgba(167, 139, 250, 0.6);
+        }
+        
+        .ultimate-judgment {
+            color: #f59e0b; /* 橙金色 - 命运审判 */
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.8), 0 0 20px rgba(245, 158, 11, 0.6);
+        }
+        
+        @keyframes ultimate-glow {
+            from {
+                text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.6);
+            }
+            to {
+                text-shadow: 0 0 15px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.8);
+            }
+        }
+        
+        .shield-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin-top: -4rem; /* 从-6rem改为-4rem，向下移动 */
+            display: flex;
+            gap: 0.5rem;
+            z-index: 21;
+        }
+        
+        .shield-icon {
+            /* 移除背景和边框，只显示盾牌emoji */
+            background: none;
+            border: none;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem; /* 稍微放大盾牌 */
+        }
+        
+        .relative {
+            position: relative;
+        }
+        
+        .absolute {
+            position: absolute;
+        }
+        
+        .fixed-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .input-top-below {
+            position: absolute;
+            top: 4rem; /* 在计时器下方 */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .top-center {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .input-top {
+            position: absolute;
+            top: 4.5rem; /* 在计时器下方 */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+        }
+        
+        .bottom-center {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .health-circle {
+            position: relative;
+        }
+        
+        .health-inner {
+            width: 4rem; /* 缩小 */
+            height: 4rem; /* 缩小 */
+            border-radius: 50%;
+            background-color: transparent; /* 去除背景色 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none !important; /* 强制无阴影 */
+            filter: none !important; /* 强制无滤镜 */
+            border: 3px solid #d1d5db; /* 浅灰色边框 */
+            transition: border-color 0.3s;
+        }
+        
+        .health-inner-revive {
+            border-color: #d4a574; /* 低饱和度金色边框 */
+            box-shadow: 0 0 15px rgba(212, 165, 116, 0.4);
+            animation: revive-border-glow 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes revive-border-glow {
+            from {
+                box-shadow: 0 0 15px rgba(212, 165, 116, 0.4);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(212, 165, 116, 0.6);
+            }
+        }
+        
+        .health-value {
+            color: #374151; /* 深灰色数字 */
+            font-size: 1.25rem;
+            font-weight: 400;
+        }
+        
+        .survival-word {
+            position: absolute;
+            transition: all 0.1s;
+            text-align: center;
+        }
+        
+        .survival-word .pinyin {
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+        
+        .survival-word .word {
+            font-size: 1.5rem;
+            color: #b91c1c;
+        }
+        
+        .explosion {
+            position: absolute;
+            pointer-events: none;
+            z-index: 30;
+        }
+        
+        .explosion-outer {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+        
+        .explosion-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            animation: pulse 0.5s ease-out;
+        }
+        
+        .explosion-success .explosion-outer {
+            background-color: #22c55e;
+        }
+        
+        .explosion-success .explosion-inner {
+            background-color: #facc15;
+        }
+        
+        .explosion-fail .explosion-outer {
+            background-color: #ef4444;
+        }
+        
+        .explosion-fail .explosion-inner {
+            background-color: #ea580c;
+        }
+        
+        .result-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+        
+        .result-title {
+            font-size: 2.25rem;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-score {
+            font-size: 3.75rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+        
+        .result-time {
+            font-size: 1.25rem;
+            color: #4b5563;
+            margin-bottom: 2rem;
+        }
+        
+        .overflow-hidden {
+            overflow: hidden;
+        }
+        
+        .min-h-screen {
+            min-height: 100vh;
+        }
+        
+        .pointer-events-none {
+            pointer-events: none;
+        }
+        
+        .z-10 {
+            z-index: 10;
+        }
+        
+        .z-20 {
+            z-index: 20;
+        }
+        
+        .z-30 {
+            z-index: 30;
+        }
+        
+        .gap-2 {
+            gap: 2rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .font-semibold {
+            font-weight: 400;
+        }
+        
+        /* 3D场景容器 */
+        #three-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* 3D文字标签 */
+        .word-label-3d {
+            position: absolute;
+            color: #6b7280; /* 汉字改成灰色 */
+            font-size: 1.5rem; /* 汉字大小与大招一致 */
+            font-weight: 400;
+            text-align: center;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .word-label-3d .pinyin {
+            font-size: 0.875rem; /* 拼音大小与大招一致 */
+            color: #6b7280; /* 灰色，与汉字一致 */
+            margin-bottom: 0.25rem;
+        }
+        
+        .word-label-3d .word-text {
+            font-size: 1.5rem; /* 汉字大小与大招一致 */
+            color: #6b7280; /* 灰色 */
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // 游戏状态
+        let gameState = 'home'; // 'home', 'timed', 'endless', 'finished'
+        let gameMode = '';
+        let timeLeft = 60;
+        let score = 0;
+        let health = 100;
+        let currentWord = { word: '', pinyin: '' };
+        let userInput = '';
+        let movingWords = [];
+        let elapsedTime = 0;
+        let recentWords = [];
+        let lastSpawnTime = 0;
+        let audioContext = null;
+        let timerInterval = null;
+        let spawnInterval = null;
+        let moveInterval = null;
+        let wordsTyped = 0; // 无尽模式统计输对的字数
+        let wordCount = 0; // 无尽模式统计生成的词组数量
+        let ultimateCharge = 0; // 大招充能
+        let currentUltimate = ''; // 当前大招词语
+        let shieldCount = 0; // 护盾数量（最多3个）
+        let hasReviveArmor = false; // 是否有复活甲
+        let frozenTimeout = null; // 冻结解除的setTimeout ID
+        
+        // 3D场景变量
+        let scene, camera, renderer;
+        let heroSphere; // 主角球体
+        let enemySpheres = []; // 敌人球体数组
+        let wordLabels = []; // 3D文字标签数组
+
+        // 词组列表（2-4个字，用于两种模式）
+        const wordList = [
+            { word: '山川', pinyin: 'shān chuān' },
+            { word: '江海', pinyin: 'jiāng hǎi' },
+            { word: '湖泽', pinyin: 'hú zé' },
+            { word: '溪涧', pinyin: 'xī jiàn' },
+            { word: '瀑布', pinyin: 'pù bù' },
+            { word: '潭渊', pinyin: 'tán yuān' },
+            { word: '沼泽', pinyin: 'zhǎo zé' },
+            { word: '冰川', pinyin: 'bīng chuān' },
+            { word: '雪原', pinyin: 'xuě yuán' },
+            { word: '云海', pinyin: 'yún hǎi' },
+            { word: '雾凇', pinyin: 'wù sōng' },
+            { word: '虹霓', pinyin: 'hóng ní' },
+            { word: '霞霭', pinyin: 'xiá ǎi' },
+            { word: '晨曦', pinyin: 'chén xī' },
+            { word: '暮霭', pinyin: 'mù ǎi' },
+            { word: '晚照', pinyin: 'wǎn zhào' },
+            { word: '晴岚', pinyin: 'qíng lán' },
+            { word: '烟雨', pinyin: 'yān yǔ' },
+            { word: '霜露', pinyin: 'shuāng lù' },
+            { word: '冰雪', pinyin: 'bīng xuě' },
+            { word: '雷霆', pinyin: 'léi tíng' },
+            { word: '闪电', pinyin: 'shǎn diàn' },
+            { word: '和风', pinyin: 'hé fēng' },
+            { word: '细雨', pinyin: 'xì yǔ' },
+            { word: '流星', pinyin: 'liú xīng' },
+            { word: '皎月', pinyin: 'jiǎo yuè' },
+            { word: '繁星', pinyin: 'fán xīng' },
+            { word: '极光', pinyin: 'jí guāng' },
+            { word: '荒漠', pinyin: 'huāng mò' },
+            { word: '戈壁', pinyin: 'gē bì' },
+            { word: '草原', pinyin: 'cǎo yuán' },
+            { word: '绿洲', pinyin: 'lǜ zhōu' },
+            { word: '林莽', pinyin: 'lín mǎng' },
+            { word: '松涛', pinyin: 'sōng tāo' },
+            { word: '竹韵', pinyin: 'zhú yùn' },
+            { word: '梅影', pinyin: 'méi yǐng' },
+            { word: '荷香', pinyin: 'hé xiāng' },
+            { word: '菊霜', pinyin: 'jú shuāng' },
+            { word: '枫火', pinyin: 'fēng huǒ' },
+            { word: '柳浪', pinyin: 'liǔ làng' },
+            { word: '桃汛', pinyin: 'táo xùn' },
+            { word: '杏雨', pinyin: 'xìng yǔ' },
+            { word: '梨云', pinyin: 'lí yún' },
+            { word: '藤蔓', pinyin: 'téng wàn' },
+            { word: '苔痕', pinyin: 'tái hén' },
+            { word: '珊瑚', pinyin: 'shān hú' },
+            { word: '贝壳', pinyin: 'bèi ké' },
+            { word: '珍珠', pinyin: 'zhēn zhū' },
+            { word: '砾石', pinyin: 'lì shí' },
+            { word: '沙丘', pinyin: 'shā qiū' },
+            { word: '岩崖', pinyin: 'yán yá' },
+            { word: '洞穴', pinyin: 'dòng xué' },
+            { word: '火山', pinyin: 'huǒ shān' },
+            { word: '温泉', pinyin: 'wēn quán' },
+            { word: '银河', pinyin: 'yín hé' },
+            { word: '鹊桥', pinyin: 'què qiáo' },
+            { word: '北斗', pinyin: 'běi dǒu' },
+            { word: '长庚', pinyin: 'cháng gēng' },
+            { word: '潮声', pinyin: 'cháo shēng' },
+            { word: '泉响', pinyin: 'quán xiǎng' },
+            { word: '蝉鸣', pinyin: 'chán míng' },
+            { word: '蛙鼓', pinyin: 'wā gǔ' },
+            { word: '莺啼', pinyin: 'yīng tí' },
+            { word: '鹤唳', pinyin: 'hè lì' },
+            { word: '鹿鸣', pinyin: 'lù míng' },
+            { word: '虎啸', pinyin: 'hǔ xiào' },
+            { word: '猿啼', pinyin: 'yuán tí' },
+            { word: '雁阵', pinyin: 'yàn zhèn' },
+            { word: '鸥翔', pinyin: 'ōu xiáng' },
+            { word: '蝶舞', pinyin: 'dié wǔ' },
+            { word: '萤火', pinyin: 'yíng huǒ' },
+            { word: '蝉翼', pinyin: 'chán yì' },
+            { word: '露珠', pinyin: 'lù zhū' },
+            { word: '涟漪', pinyin: 'lián yī' },
+            { word: '波涛', pinyin: 'bō tāo' },
+            { word: '浪花', pinyin: 'làng huā' },
+            { word: '漩涡', pinyin: 'xuán wō' },
+            { word: '湍流', pinyin: 'tuān liú' },
+            { word: '幽谷', pinyin: 'yōu gǔ' },
+            { word: '峻岭', pinyin: 'jùn lǐng' },
+            { word: '丘陵', pinyin: 'qiū líng' },
+            { word: '平原', pinyin: 'píng yuán' },
+            { word: '盆地', pinyin: 'pén dì' },
+            { word: '岛屿', pinyin: 'dǎo yǔ' },
+            { word: '半岛', pinyin: 'bàn dǎo' },
+            { word: '海峡', pinyin: 'hǎi xiá' },
+            { word: '港湾', pinyin: 'gǎng wān' },
+            { word: '沙滩', pinyin: 'shā tān' },
+            { word: '礁石', pinyin: 'jiāo shí' },
+            { word: '潮汐', pinyin: 'cháo xī' },
+            { word: '季风', pinyin: 'jì fēng' },
+            { word: '暖流', pinyin: 'nuǎn liú' },
+            { word: '寒潮', pinyin: 'hán cháo' },
+            { word: '彩虹', pinyin: 'cǎi hóng' },
+            { word: '日晕', pinyin: 'rì yùn' },
+            { word: '月华', pinyin: 'yuè huá' },
+            { word: '星辉', pinyin: 'xīng huī' },
+            { word: '云霞', pinyin: 'yún xiá' },
+            { word: '岚烟', pinyin: 'lán yān' },
+            { word: '水雾', pinyin: 'shuǐ wù' },
+            { word: '冰挂', pinyin: 'bīng guà' },
+            { word: '雪霰', pinyin: 'xuě xiàn' },
+            { word: '霜晶', pinyin: 'shuāng jīng' },
+            { word: '晨露', pinyin: 'chén lù' },
+            { word: '暮雪', pinyin: 'mù xuě' },
+            { word: '秋霖', pinyin: 'qiū lín' },
+            { word: '春汛', pinyin: 'chūn xùn' },
+            { word: '夏霓', pinyin: 'xià ní' },
+            { word: '冬霙', pinyin: 'dōng yīng' },
+            { word: '野径', pinyin: 'yě jìng' },
+            { word: '芳甸', pinyin: 'fāng diàn' },
+            { word: '莽原', pinyin: 'mǎng yuán' },
+            { word: '密林', pinyin: 'mì lín' },
+            { word: '疏桐', pinyin: 'shū tóng' },
+            { word: '残荷', pinyin: 'cán hé' },
+            { word: '落樱', pinyin: 'luò yīng' },
+            { word: '飘絮', pinyin: 'piāo xù' },
+            { word: '枯藤', pinyin: 'kū téng' },
+            { word: '新芽', pinyin: 'xīn yá' },
+            { word: '古木', pinyin: 'gǔ mù' },
+            { word: '奇石', pinyin: 'qí shí' },
+            { word: '秀水', pinyin: 'xiù shuǐ' },
+            { word: '灵峰', pinyin: 'líng fēng' },
+            { word: '幻月', pinyin: 'huàn yuè' },
+            { word: '流萤', pinyin: 'liú yíng' },
+            { word: '蛰雷', pinyin: 'zhé léi' },
+            { word: '旱雷', pinyin: 'hàn léi' },
+            { word: '闷雷', pinyin: 'mèn léi' },
+            { word: '清风', pinyin: 'qīng fēng' },
+            { word: '徐风', pinyin: 'xú fēng' },
+            { word: '狂风', pinyin: 'kuáng fēng' },
+            { word: '飓风', pinyin: 'jù fēng' },
+            { word: '微风', pinyin: 'wēi fēng' },
+            { word: '暖阳', pinyin: 'nuǎn yáng' },
+            { word: '烈日', pinyin: 'liè rì' },
+            { word: '斜阳', pinyin: 'xié yáng' },
+            { word: '残阳', pinyin: 'cán yáng' },
+            { word: '旭日', pinyin: 'xù rì' },
+            { word: '皓月', pinyin: 'hào yuè' },
+            { word: '弦月', pinyin: 'xián yuè' },
+            { word: '眉月', pinyin: 'méi yuè' },
+            { word: '朔月', pinyin: 'shuò yuè' },
+            { word: '望月', pinyin: 'wàng yuè' },
+            { word: '薄雾', pinyin: 'bó wù' },
+            { word: '浓雾', pinyin: 'nóng wù' },
+            { word: '山霭', pinyin: 'shān ǎi' },
+            { word: '水汽', pinyin: 'shuǐ qì' },
+            { word: '云烟', pinyin: 'yún yān' },
+            { word: '山明水秀', pinyin: 'shān míng shuǐ xiù' },
+            { word: '湖光山色', pinyin: 'hú guāng shān sè' },
+            { word: '江山如画', pinyin: 'jiāng shān rú huà' },
+            { word: '水天一色', pinyin: 'shuǐ tiān yī sè' },
+            { word: '烟波浩渺', pinyin: 'yān bō hào miǎo' },
+            { word: '波澜壮阔', pinyin: 'bō lán zhuàng kuò' },
+            { word: '飞瀑流泉', pinyin: 'fēi pù liú quán' },
+            { word: '溪水潺潺', pinyin: 'xī shuǐ chán chán' },
+            { word: '碧海青天', pinyin: 'bì hǎi qīng tiān' },
+            { word: '金沙碧浪', pinyin: 'jīn shā bì làng' },
+            { word: '惊涛拍岸', pinyin: 'jīng tāo pāi àn' },
+            { word: '潮起潮落', pinyin: 'cháo qǐ cháo luò' },
+            { word: '云蒸霞蔚', pinyin: 'yún zhēng xiá wèi' },
+            { word: '风起云涌', pinyin: 'fēng qǐ yún yǒng' },
+            { word: '雷电交加', pinyin: 'léi diàn jiāo jiā' },
+            { word: '虹销雨霁', pinyin: 'hóng xiāo yǔ jì' },
+            { word: '月白风清', pinyin: 'yuè bái fēng qīng' },
+            { word: '星罗棋布', pinyin: 'xīng luó qí bù' },
+            { word: '斗转参横', pinyin: 'dǒu zhuǎn shēn héng' },
+            { word: '银河泻影', pinyin: 'yín hé xiè yǐng' },
+            { word: '春暖花开', pinyin: 'chūn nuǎn huā kāi' },
+            { word: '夏日炎炎', pinyin: 'xià rì yán yán' },
+            { word: '秋高气爽', pinyin: 'qiū gāo qì shuǎng' },
+            { word: '冬雪皑皑', pinyin: 'dōng xuě ái ái' },
+            { word: '莺歌燕舞', pinyin: 'yīng gē yàn wǔ' },
+            { word: '鸟语花香', pinyin: 'niǎo yǔ huā xiāng' },
+            { word: '虎啸龙吟', pinyin: 'hǔ xiào lóng yín' },
+            { word: '鹿奔鹤翔', pinyin: 'lù bēn hè xiáng' },
+            { word: '桃红柳绿', pinyin: 'táo hóng liǔ lǜ' },
+            { word: '枫林尽染', pinyin: 'fēng lín jìn rǎn' },
+            { word: '梅雪争春', pinyin: 'méi xuě zhēng chūn' },
+            { word: '竹影婆娑', pinyin: 'zhú yǐng pó suō' },
+            { word: '松涛阵阵', pinyin: 'sōng tāo zhèn zhèn' },
+            { word: '荷风送香', pinyin: 'hé fēng sòng xiāng' },
+            { word: '菊傲霜枝', pinyin: 'jú ào shuāng zhī' },
+            { word: '兰薰桂馥', pinyin: 'lán xūn guì fù' },
+            { word: '荒漠孤烟', pinyin: 'huāng mò gū yān' },
+            { word: '草原辽阔', pinyin: 'cǎo yuán liáo kuò' },
+            { word: '林海雪原', pinyin: 'lín hǎi xuě yuán' },
+            { word: '绿洲生机', pinyin: 'lǜ zhōu shēng jī' },
+            { word: '奇峰罗列', pinyin: 'qí fēng luó liè' },
+            { word: '怪石嶙峋', pinyin: 'guài shí lín xún' },
+            { word: '幽洞深邃', pinyin: 'yōu dòng shēn suì' },
+            { word: '火山喷发', pinyin: 'huǒ shān pēn fā' },
+            { word: '温泉氤氲', pinyin: 'wēn quán yīn yūn' },
+            { word: '冰川移动', pinyin: 'bīng chuān yí dòng' },
+            { word: '极光幻彩', pinyin: 'jí guāng huàn cǎi' },
+            { word: '流星划空', pinyin: 'liú xīng huá kōng' },
+            { word: '海市蜃楼', pinyin: 'hǎi shì shèn lóu' },
+            { word: '蓬莱仙境', pinyin: 'péng lái xiān jìng' },
+            { word: '世外桃源', pinyin: 'shì wài táo yuán' },
+            { word: '人间胜境', pinyin: 'rén jiān shèng jìng' },
+            { word: '日出东方', pinyin: 'rì chū dōng fāng' },
+            { word: '夕阳西下', pinyin: 'xī yáng xī xià' },
+            { word: '皓月当空', pinyin: 'hào yuè dāng kōng' },
+            { word: '繁星闪烁', pinyin: 'fán xīng shǎn shuò' },
+            { word: '风和日丽', pinyin: 'fēng hé rì lì' },
+            { word: '雨过天晴', pinyin: 'yǔ guò tiān qíng' },
+            { word: '雪花飞舞', pinyin: 'xuě huā fēi wǔ' },
+            { word: '雾气朦胧', pinyin: 'wù qì méng lóng' },
+            { word: '露珠晶莹', pinyin: 'lù zhū jīng yíng' },
+            { word: '霜叶红于', pinyin: 'shuāng yè hóng yú' },
+            { word: '冰封万里', pinyin: 'bīng fēng wàn lǐ' },
+            { word: '雪融春水', pinyin: 'xuě róng chūn shuǐ' },
+            { word: '山重水复', pinyin: 'shān chóng shuǐ fù' },
+            { word: '柳暗花明', pinyin: 'liǔ àn huā míng' },
+            { word: '曲径通幽', pinyin: 'qū jìng tōng yōu' },
+            { word: '别有洞天', pinyin: 'bié yǒu dòng tiān' },
+            { word: '自然造化', pinyin: 'zì rán zào huà' },
+            { word: '鬼斧神工', pinyin: 'guǐ fǔ shén gōng' },
+            { word: '天地精华', pinyin: 'tiān dì jīng huá' },
+            { word: '万物生机', pinyin: 'wàn wù shēng jī' },
+            { word: '生态平衡', pinyin: 'shēng tài píng héng' },
+            { word: '环境保护', pinyin: 'huán jìng bǎo hù' },
+            { word: '绿水青山', pinyin: 'lǜ shuǐ qīng shān' },
+            { word: '金山银山', pinyin: 'jīn shān yín shān' },
+            { word: '持续发展', pinyin: 'chí xù fā zhǎn' },
+            { word: '和谐共生', pinyin: 'hé xié gòng shēng' },
+            { word: '敬畏自然', pinyin: 'jìng wèi zì rán' },
+            { word: '道法自然', pinyin: 'dào fǎ zì rán' },
+            { word: '九寨沟', pinyin: 'jiǔ zhài gōu' },
+            { word: '张家界', pinyin: 'zhāng jiā jiè' },
+            { word: '黄果树', pinyin: 'huáng guǒ shù' },
+            { word: '漓江画', pinyin: 'lí jiāng huà' },
+            { word: '西湖春', pinyin: 'xī hú chūn' },
+            { word: '黄山松', pinyin: 'huáng shān sōng' },
+            { word: '峨眉月', pinyin: 'é méi yuè' },
+            { word: '泰山日', pinyin: 'tài shān rì' },
+            { word: '华山险', pinyin: 'huà shān xiǎn' },
+            { word: '昆仑雪', pinyin: 'kūn lún xuě' },
+            { word: '长白山', pinyin: 'cháng bái shān' },
+            { word: '鼓浪屿', pinyin: 'gǔ làng yǔ' },
+            { word: '青海湖', pinyin: 'qīng hǎi hú' },
+            { word: '洞庭波', pinyin: 'dòng tíng bō' },
+            { word: '鄱阳雁', pinyin: 'pó yáng yàn' },
+            { word: '太湖石', pinyin: 'tài hú shí' },
+            { word: '富春江', pinyin: 'fù chūn jiāng' },
+            { word: '乌苏里', pinyin: 'wū sū lǐ' },
+            { word: '日月潭', pinyin: 'rì yuè tán' },
+            { word: '翡翠岛', pinyin: 'fěi cuì dǎo' },
+            { word: '珊瑚海', pinyin: 'shān hú hǎi' },
+            { word: '珍珠滩', pinyin: 'zhēn zhū tān' },
+            { word: '玛瑙湖', pinyin: 'mǎ nǎo hú' },
+            { word: '琉璃河', pinyin: 'liú lí hé' },
+            { word: '琥珀光', pinyin: 'hǔ pò guāng' },
+            { word: '水晶宫', pinyin: 'shuǐ jīng gōng' },
+            { word: '翡翠谷', pinyin: 'fěi cuì gǔ' },
+            { word: '玛瑙峰', pinyin: 'mǎ nǎo fēng' },
+            { word: '云水谣', pinyin: 'yún shuǐ yáo' },
+            { word: '风入松', pinyin: 'fēng rù sōng' },
+            { word: '雨打萍', pinyin: 'yǔ dǎ píng' },
+            { word: '雪满山', pinyin: 'xuě mǎn shān' },
+            { word: '月笼沙', pinyin: 'yuè lóng shā' },
+            { word: '花满蹊', pinyin: 'huā mǎn xī' },
+            { word: '鸟惊心', pinyin: 'niǎo jīng xīn' },
+            { word: '蝉噪林', pinyin: 'chán zào lín' },
+            { word: '鹿饮溪', pinyin: 'lù yǐn xī' },
+            { word: '虎啸岩', pinyin: 'hǔ xiào yán' },
+            { word: '猿啼峡', pinyin: 'yuán tí xiá' },
+            { word: '雁落滩', pinyin: 'yàn luò tān' },
+            { word: '仁义', pinyin: 'rén yì' },
+            { word: '礼智', pinyin: 'lǐ zhì' },
+            { word: '信诚', pinyin: 'xìn chéng' },
+            { word: '忠孝', pinyin: 'zhōng xiào' },
+            { word: '廉耻', pinyin: 'lián chǐ' },
+            { word: '谦和', pinyin: 'qiān hé' },
+            { word: '温良', pinyin: 'wēn liáng' },
+            { word: '恭敬', pinyin: 'gōng jìng' },
+            { word: '俭让', pinyin: 'jiǎn ràng' },
+            { word: '刚毅', pinyin: 'gāng yì' },
+            { word: '柔韧', pinyin: 'róu rèn' },
+            { word: '勤勉', pinyin: 'qín miǎn' },
+            { word: '慎独', pinyin: 'shèn dú' },
+            { word: '淡泊', pinyin: 'dàn bó' },
+            { word: '旷达', pinyin: 'kuàng dá' },
+            { word: '洒脱', pinyin: 'sǎ tuō' },
+            { word: '飘逸', pinyin: 'piāo yì' },
+            { word: '清雅', pinyin: 'qīng yǎ' },
+            { word: '幽邃', pinyin: 'yōu suì' },
+            { word: '静谧', pinyin: 'jìng mì' },
+            { word: '逍遥', pinyin: 'xiāo yáo' },
+            { word: '悠然', pinyin: 'yōu rán' },
+            { word: '澄澈', pinyin: 'chéng chè' },
+            { word: '玲珑', pinyin: 'líng lóng' },
+            { word: '璀璨', pinyin: 'cuǐ càn' },
+            { word: '智慧', pinyin: 'zhì huì' },
+            { word: '哲思', pinyin: 'zhé sī' },
+            { word: '禅意', pinyin: 'chán yì' },
+            { word: '道心', pinyin: 'dào xīn' },
+            { word: '儒雅', pinyin: 'rú yǎ' },
+            { word: '佛性', pinyin: 'fó xìng' },
+            { word: '法度', pinyin: 'fǎ dù' },
+            { word: '墨客', pinyin: 'mò kè' },
+            { word: '书生', pinyin: 'shū shēng' },
+            { word: '侠义', pinyin: 'xiá yì' },
+            { word: '豪情', pinyin: 'háo qíng' },
+            { word: '悲悯', pinyin: 'bēi mǐn' },
+            { word: '慈爱', pinyin: 'cí ài' },
+            { word: '宽容', pinyin: 'kuān róng' },
+            { word: '忍让', pinyin: 'rěn ràng' },
+            { word: '坚贞', pinyin: 'jiān zhēn' },
+            { word: '执着', pinyin: 'zhí zhuó' },
+            { word: '超脱', pinyin: 'chāo tuō' },
+            { word: '觉悟', pinyin: 'jué wù' },
+            { word: '修行', pinyin: 'xiū xíng' },
+            { word: '因果', pinyin: 'yīn guǒ' },
+            { word: '缘分', pinyin: 'yuán fèn' },
+            { word: '命运', pinyin: 'mìng yùn' },
+            { word: '造化', pinyin: 'zào huà' },
+            { word: '无常', pinyin: 'wú cháng' },
+            { word: '永恒', pinyin: 'yǒng héng' },
+            { word: '瞬间', pinyin: 'shùn jiān' },
+            { word: '虚实', pinyin: 'xū shí' },
+            { word: '有无', pinyin: 'yǒu wú' },
+            { word: '阴阳', pinyin: 'yīn yáng' },
+            { word: '方圆', pinyin: 'fāng yuán' },
+            { word: '动静', pinyin: 'dòng jìng' },
+            { word: '浮沉', pinyin: 'fú chén' },
+            { word: '得失', pinyin: 'dé shī' },
+            { word: '荣枯', pinyin: 'róng kū' },
+            { word: '悲欢', pinyin: 'bēi huān' },
+            { word: '离合', pinyin: 'lí hé' },
+            { word: '善恶', pinyin: 'shàn è' },
+            { word: '是非', pinyin: 'shì fēi' },
+            { word: '曲直', pinyin: 'qū zhí' },
+            { word: '古今', pinyin: 'gǔ jīn' },
+            { word: '中外', pinyin: 'zhōng wài' },
+            { word: '南北', pinyin: 'nán běi' },
+            { word: '东西', pinyin: 'dōng xī' },
+            { word: '左右', pinyin: 'zuǒ yòu' },
+            { word: '文武', pinyin: 'wén wǔ' },
+            { word: '智勇', pinyin: 'zhì yǒng' },
+            { word: '诗书', pinyin: 'shī shū' },
+            { word: '礼乐', pinyin: 'lǐ yuè' },
+            { word: '琴棋', pinyin: 'qín qí' },
+            { word: '书画', pinyin: 'shū huà' },
+            { word: '茶酒', pinyin: 'chá jiǔ' },
+            { word: '花剑', pinyin: 'huā jiàn' },
+            { word: '香道', pinyin: 'xiāng dào' },
+            { word: '玉德', pinyin: 'yù dé' },
+            { word: '金声', pinyin: 'jīn shēng' },
+            { word: '石魄', pinyin: 'shí pò' },
+            { word: '丝竹', pinyin: 'sī zhú' },
+            { word: '陶韵', pinyin: 'táo yùn' },
+            { word: '瓷魂', pinyin: 'cí hún' },
+            { word: '青铜', pinyin: 'qīng tóng' },
+            { word: '铁骨', pinyin: 'tiě gǔ' },
+            { word: '翰墨', pinyin: 'hàn mò' },
+            { word: '丹青', pinyin: 'dān qīng' },
+            { word: '诗韵', pinyin: 'shī yùn' },
+            { word: '词牌', pinyin: 'cí pái' },
+            { word: '曲调', pinyin: 'qǔ diào' },
+            { word: '文章', pinyin: 'wén zhāng' },
+            { word: '典籍', pinyin: 'diǎn jí' },
+            { word: '史册', pinyin: 'shǐ cè' },
+            { word: '哲理', pinyin: 'zhé lǐ' },
+            { word: '格言', pinyin: 'gé yán' },
+            { word: '箴言', pinyin: 'zhēn yán' },
+            { word: '寓言', pinyin: 'yù yán' },
+            { word: '神话', pinyin: 'shén huà' },
+            { word: '传说', pinyin: 'chuán shuō' },
+            { word: '民俗', pinyin: 'mín sú' },
+            { word: '礼仪', pinyin: 'lǐ yí' },
+            { word: '风俗', pinyin: 'fēng sú' },
+            { word: '传统', pinyin: 'chuán tǒng' },
+            { word: '创新', pinyin: 'chuàng xīn' },
+            { word: '变革', pinyin: 'biàn gé' },
+            { word: '传承', pinyin: 'chuán chéng' },
+            { word: '发展', pinyin: 'fā zhǎn' },
+            { word: '进步', pinyin: 'jìn bù' },
+            { word: '和平', pinyin: 'hé píng' },
+            { word: '和谐', pinyin: 'hé xié' },
+            { word: '公正', pinyin: 'gōng zhèng' },
+            { word: '自由', pinyin: 'zì yóu' },
+            { word: '平等', pinyin: 'píng děng' },
+            { word: '博爱', pinyin: 'bó ài' },
+            { word: '人权', pinyin: 'rén quán' },
+            { word: '民主', pinyin: 'mín zhǔ' },
+            { word: '法治', pinyin: 'fǎ zhì' },
+            { word: '文明', pinyin: 'wén míng' },
+            { word: '文化', pinyin: 'wén huà' },
+            { word: '艺术', pinyin: 'yì shù' },
+            { word: '哲学', pinyin: 'zhé xué' },
+            { word: '宗教', pinyin: 'zōng jiào' },
+            { word: '伦理', pinyin: 'lún lǐ' },
+            { word: '道德', pinyin: 'dào dé' },
+            { word: '价值', pinyin: 'jià zhí' },
+            { word: '理想', pinyin: 'lǐ xiǎng' },
+            { word: '信念', pinyin: 'xìn niàn' },
+            { word: '信仰', pinyin: 'xìn yǎng' },
+            { word: '希望', pinyin: 'xī wàng' },
+            { word: '梦想', pinyin: 'mèng xiǎng' },
+            { word: '现实', pinyin: 'xiàn shí' },
+            { word: '虚幻', pinyin: 'xū huàn' },
+            { word: '真理', pinyin: 'zhēn lǐ' },
+            { word: '谬误', pinyin: 'miù wù' },
+            { word: '知识', pinyin: 'zhī shí' },
+            { word: '无知', pinyin: 'wú zhī' },
+            { word: '智慧', pinyin: 'zhì huì' },
+            { word: '愚昧', pinyin: 'yú mèi' },
+            { word: '幸福', pinyin: 'xìng fú' },
+            { word: '痛苦', pinyin: 'tòng kǔ' },
+            { word: '快乐', pinyin: 'kuài lè' },
+            { word: '悲伤', pinyin: 'bēi shāng' },
+            { word: '爱恨', pinyin: 'ài hèn' },
+            { word: '情仇', pinyin: 'qíng chóu' },
+            { word: '恩怨', pinyin: 'ēn yuàn' },
+            { word: '功过', pinyin: 'gōng guò' },
+            { word: '成败', pinyin: 'chéng bài' },
+            { word: '生死', pinyin: 'shēng sǐ' },
+            { word: '厚德载物', pinyin: 'hòu dé zài wù' },
+            { word: '自强不息', pinyin: 'zì qiáng bù xī' },
+            { word: '上善若水', pinyin: 'shàng shàn ruò shuǐ' },
+            { word: '道法自然', pinyin: 'dào fǎ zì rán' },
+            { word: '仁者爱人', pinyin: 'rén zhě ài rén' },
+            { word: '义薄云天', pinyin: 'yì bó yún tiān' },
+            { word: '礼贤下士', pinyin: 'lǐ xián xià shì' },
+            { word: '智圆行方', pinyin: 'zhì yuán xíng fāng' },
+            { word: '信守不渝', pinyin: 'xìn shǒu bù yú' },
+            { word: '忠肝义胆', pinyin: 'zhōng gān yì dǎn' },
+            { word: '孝感动天', pinyin: 'xiào gǎn dòng tiān' },
+            { word: '廉洁奉公', pinyin: 'lián jié fèng gōng' },
+            { word: '知耻后勇', pinyin: 'zhī chǐ hòu yǒng' },
+            { word: '谦虚谨慎', pinyin: 'qiān xū jǐn shèn' },
+            { word: '温文尔雅', pinyin: 'wēn wén ěr yǎ' },
+            { word: '刚正不阿', pinyin: 'gāng zhèng bù ē' },
+            { word: '坚韧不拔', pinyin: 'jiān rèn bù bá' },
+            { word: '勤能补拙', pinyin: 'qín néng bǔ zhuō' },
+            { word: '慎终如始', pinyin: 'shèn zhōng rú shǐ' },
+            { word: '淡泊明志', pinyin: 'dàn bó míng zhì' },
+            { word: '宁静致远', pinyin: 'níng jìng zhì yuǎn' },
+            { word: '旷达不羁', pinyin: 'kuàng dá bù jī' },
+            { word: '洒脱自在', pinyin: 'sǎ tuō zì zài' },
+            { word: '飘逸出尘', pinyin: 'piāo yì chū chén' },
+            { word: '清雅脱俗', pinyin: 'qīng yǎ tuō sú' },
+            { word: '幽深邃远', pinyin: 'yōu shēn suì yuǎn' },
+            { word: '静谧安详', pinyin: 'jìng mì ān xiáng' },
+            { word: '逍遥物外', pinyin: 'xiāo yáo wù wài' },
+            { word: '悠然自得', pinyin: 'yōu rán zì dé' },
+            { word: '澄澈透明', pinyin: 'chéng chè tòu míng' },
+            { word: '玲珑剔透', pinyin: 'líng lóng tī tòu' },
+            { word: '璀璨夺目', pinyin: 'cuǐ càn duó mù' },
+            { word: '大智若愚', pinyin: 'dà zhì ruò yú' },
+            { word: '大巧若拙', pinyin: 'dà qiǎo ruò zhuō' },
+            { word: '大音希声', pinyin: 'dà yīn xī shēng' },
+            { word: '大象无形', pinyin: 'dà xiàng wú xíng' },
+            { word: '海纳百川', pinyin: 'hǎi nà bǎi chuān' },
+            { word: '有容乃大', pinyin: 'yǒu róng nǎi dà' },
+            { word: '无欲则刚', pinyin: 'wú yù zé gāng' },
+            { word: '壁立千仞', pinyin: 'bì lì qiān rèn' },
+            { word: '知行合一', pinyin: 'zhī xíng hé yī' },
+            { word: '格物致知', pinyin: 'gé wù zhì zhī' },
+            { word: '诚意正心', pinyin: 'chéng yì zhèng xīn' },
+            { word: '修身齐家', pinyin: 'xiū shēn qí jiā' },
+            { word: '治国平天', pinyin: 'zhì guó píng tiān' },
+            { word: '穷则独善', pinyin: 'qióng zé dú shàn' },
+            { word: '达则兼济', pinyin: 'dá zé jiān jì' },
+            { word: '天下为公', pinyin: 'tiān xià wéi gōng' },
+            { word: '世界大同', pinyin: 'shì jiè dà tóng' },
+            { word: '和而不同', pinyin: 'hé ér bù tóng' },
+            { word: '求同存异', pinyin: 'qiú tóng cún yì' },
+            { word: '居安思危', pinyin: 'jū ān sī wēi' },
+            { word: '未雨绸缪', pinyin: 'wèi yǔ chóu móu' },
+            { word: '防微杜渐', pinyin: 'fáng wēi dù jiàn' },
+            { word: '亡羊补牢', pinyin: 'wáng yáng bǔ láo' },
+            { word: '塞翁失马', pinyin: 'sài wēng shī mǎ' },
+            { word: '焉知非福', pinyin: 'yān zhī fēi fú' },
+            { word: '福祸相依', pinyin: 'fú huò xiāng yī' },
+            { word: '否极泰来', pinyin: 'pǐ jí tài lái' },
+            { word: '乐极生悲', pinyin: 'lè jí shēng bēi' },
+            { word: '物极必反', pinyin: 'wù jí bì fǎn' },
+            { word: '周而复始', pinyin: 'zhōu ér fù shǐ' },
+            { word: '循环往复', pinyin: 'xún huán wǎng fù' },
+            { word: '生生不息', pinyin: 'shēng shēng bù xī' },
+            { word: '永恒不变', pinyin: 'yǒng héng bù biàn' },
+            { word: '瞬息万变', pinyin: 'shùn xī wàn biàn' },
+            { word: '沧海桑田', pinyin: 'cāng hǎi sāng tián' },
+            { word: '白云苍狗', pinyin: 'bái yún cāng gǒu' },
+            { word: '镜花水月', pinyin: 'jìng huā shuǐ yuè' },
+            { word: '梦幻泡影', pinyin: 'mèng huàn pào yǐng' },
+            { word: '电光石火', pinyin: 'diàn guāng shí huǒ' },
+            { word: '浮生若梦', pinyin: 'fú shēng ruò mèng' },
+            { word: '为欢几何', pinyin: 'wéi huān jǐ hé' },
+            { word: '人生如寄', pinyin: 'rén shēng rú jì' },
+            { word: '白驹过隙', pinyin: 'bái jū guò xì' },
+            { word: '珍惜当下', pinyin: 'zhēn xī dāng xià' },
+            { word: '把握现在', pinyin: 'bǎ wò xiàn zài' },
+            { word: '展望未来', pinyin: 'zhǎn wàng wèi lái' },
+            { word: '回顾过去', pinyin: 'huí gù guò qù' },
+            { word: '继往开来', pinyin: 'jì wǎng kāi lái' },
+            { word: '仁者心', pinyin: 'rén zhě xīn' },
+            { word: '义士魂', pinyin: 'yì shì hún' },
+            { word: '礼之用', pinyin: 'lǐ zhī yòng' },
+            { word: '智之谋', pinyin: 'zhì zhī móu' },
+            { word: '信之诺', pinyin: 'xìn zhī nuò' },
+            { word: '忠之胆', pinyin: 'zhōng zhī dǎn' },
+            { word: '孝之行', pinyin: 'xiào zhī xíng' },
+            { word: '廉之节', pinyin: 'lián zhī jié' },
+            { word: '耻之观', pinyin: 'chǐ zhī guān' },
+            { word: '谦之德', pinyin: 'qiān zhī dé' },
+            { word: '和之气', pinyin: 'hé zhī qì' },
+            { word: '温之玉', pinyin: 'wēn zhī yù' },
+            { word: '良之品', pinyin: 'liáng zhī pǐn' },
+            { word: '恭之态', pinyin: 'gōng zhī tài' },
+            { word: '敬之心', pinyin: 'jìng zhī xīn' },
+            { word: '俭之习', pinyin: 'jiǎn zhī xí' },
+            { word: '让之风', pinyin: 'ràng zhī fēng' },
+            { word: '刚之骨', pinyin: 'gāng zhī gǔ' },
+            { word: '毅之志', pinyin: 'yì zhī zhì' },
+            { word: '柔之情', pinyin: 'róu zhī qíng' },
+            { word: '韧之性', pinyin: 'rèn zhī xìng' },
+            { word: '勤之手', pinyin: 'qín zhī shǒu' },
+            { word: '勉之力', pinyin: 'miǎn zhī lì' },
+            { word: '慎之思', pinyin: 'shèn zhī sī' },
+            { word: '独之境', pinyin: 'dú zhī jìng' },
+            { word: '淡之味', pinyin: 'dàn zhī wèi' },
+            { word: '泊之志', pinyin: 'bó zhī zhì' },
+            { word: '旷之怀', pinyin: 'kuàng zhī huái' },
+            { word: '达之观', pinyin: 'dá zhī guān' },
+            { word: '洒之态', pinyin: 'sǎ zhī tài' },
+            { word: '脱之俗', pinyin: 'tuō zhī sú' },
+            { word: '飘之韵', pinyin: 'piāo zhī yùn' },
+            { word: '逸之趣', pinyin: 'yì zhī qù' },
+            { word: '清之品', pinyin: 'qīng zhī pǐn' },
+            { word: '雅之格', pinyin: 'yǎ zhī gé' },
+            { word: '幽之意', pinyin: 'yōu zhī yì' },
+            { word: '邃之理', pinyin: 'suì zhī lǐ' },
+            { word: '静之界', pinyin: 'jìng zhī jiè' },
+            { word: '谧之美', pinyin: 'mì zhī měi' },
+            { word: '逍遥游', pinyin: 'xiāo yáo yóu' },
+            { word: '人工智能', pinyin: 'rén gōng zhì néng' },
+            { word: '机器学习', pinyin: 'jī qì xué xí' },
+            { word: '深度学习', pinyin: 'shēn dù xué xí' },
+            { word: '神经网络', pinyin: 'shén jīng wǎng luò' },
+            { word: '大数据', pinyin: 'dà shù jù' },
+            { word: '云计算', pinyin: 'yún jì suàn' },
+            { word: '边缘计算', pinyin: 'biān yuán jì suàn' },
+            { word: '量子计算', pinyin: 'liàng zǐ jì suàn' },
+            { word: '区块链', pinyin: 'qū kuài liàn' },
+            { word: '加密货币', pinyin: 'jiā mì huò bì' },
+            { word: '元宇宙', pinyin: 'yuán yǔ zhòu' },
+            { word: '数字孪生', pinyin: 'shù zì luán shēng' },
+            { word: '物联网', pinyin: 'wù lián wǎng' },
+            { word: '5G通信', pinyin: '5G tōng xìn' },
+            { word: '6G研发', pinyin: '6G yán fā' },
+            { word: '自动驾驶', pinyin: 'zì dòng jià shǐ' },
+            { word: '无人机', pinyin: 'wú rén jī' },
+            { word: '机器人', pinyin: 'jī qì rén' },
+            { word: '仿生学', pinyin: 'fǎng shēng xué' },
+            { word: '基因编辑', pinyin: 'jī yīn biān jí' },
+            { word: 'CRISPR', pinyin: 'CRISPR' },
+            { word: '合成生物', pinyin: 'hé chéng shēng wù' },
+            { word: '脑机接口', pinyin: 'nǎo jī jiē kǒu' },
+            { word: '虚拟现实', pinyin: 'xū nǐ xiàn shí' },
+            { word: '增强现实', pinyin: 'zēng qiáng xiàn shí' },
+            { word: '混合现实', pinyin: 'hùn hé xiàn shí' },
+            { word: '扩展现实', pinyin: 'kuò zhǎn xiàn shí' },
+            { word: '全息投影', pinyin: 'quán xī tóu yǐng' },
+            { word: '3D打印', pinyin: '3D dǎ yìn' },
+            { word: '4D打印', pinyin: '4D dǎ yìn' },
+            { word: '纳米技术', pinyin: 'nà mǐ jì shù' },
+            { word: '石墨烯', pinyin: 'shí mò xī' },
+            { word: '碳纤维', pinyin: 'tàn xiān wéi' },
+            { word: '超材料', pinyin: 'chāo cái liào' },
+            { word: '智能材料', pinyin: 'zhì néng cái liào' },
+            { word: '柔性电子', pinyin: 'róu xìng diàn zǐ' },
+            { word: '可穿戴设备', pinyin: 'kě chuān dài shè bèi' },
+            { word: '智能家居', pinyin: 'zhì néng jiā jū' },
+            { word: '智慧城市', pinyin: 'zhì huì chéng shì' },
+            { word: '数字治理', pinyin: 'shù zì zhì lǐ' },
+            { word: '网络安全', pinyin: 'wǎng luò ān quán' },
+            { word: '数据隐私', pinyin: 'shù jù yǐn sī' },
+            { word: '算法伦理', pinyin: 'suàn fǎ lún lǐ' },
+            { word: '科技向善', pinyin: 'kē jì xiàng shàn' },
+            { word: '绿色科技', pinyin: 'lǜ sè kē jì' },
+            { word: '清洁能源', pinyin: 'qīng jié néng yuán' },
+            { word: '太阳能', pinyin: 'tài yáng néng' },
+            { word: '风能', pinyin: 'fēng néng' },
+            { word: '氢能源', pinyin: 'qīng néng yuán' },
+            { word: '核聚变', pinyin: 'hé jù biàn' },
+            { word: '碳中和', pinyin: 'tàn zhōng hé' },
+            { word: '碳达峰', pinyin: 'tàn dá fēng' },
+            { word: '循环经济', pinyin: 'xún huán jīng jì' },
+            { word: '持续发展', pinyin: 'chí xù fā zhǎn' },
+            { word: '生物多样', pinyin: 'shēng wù duō yàng' },
+            { word: '生态修复', pinyin: 'shēng tài xiū fù' },
+            { word: '太空探索', pinyin: 'tài kōng tàn suǒ' },
+            { word: '火星移民', pinyin: 'huǒ xīng yí mín' },
+            { word: '月球基地', pinyin: 'yuè qiú jī dì' },
+            { word: '小行星采矿', pinyin: 'xiǎo xíng xīng cǎi kuàng' },
+            { word: '星际旅行', pinyin: 'xīng jì lǚ xíng' },
+            { word: '引力波', pinyin: 'yǐn lì bō' },
+            { word: '暗物质', pinyin: 'àn wù zhì' },
+            { word: '暗能量', pinyin: 'àn néng liàng' },
+            { word: '黑洞', pinyin: 'hēi dòng' },
+            { word: '量子纠缠', pinyin: 'liàng zǐ jiū chán' },
+            { word: '超导体', pinyin: 'chāo dǎo tǐ' },
+            { word: '拓扑绝缘体', pinyin: 'tuò pū jué yuán tǐ' },
+            { word: '芯片', pinyin: 'xīn piàn' },
+            { word: '半导体', pinyin: 'bàn dǎo tǐ' },
+            { word: '光刻机', pinyin: 'guāng kè jī' },
+            { word: '操作系统', pinyin: 'cāo zuò xì tǒng' },
+            { word: '开源', pinyin: 'kāi yuán' },
+            { word: '闭源', pinyin: 'bì yuán' },
+            { word: '软件', pinyin: 'ruǎn jiàn' },
+            { word: '硬件', pinyin: 'yìng jiàn' },
+            { word: '算法', pinyin: 'suàn fǎ' },
+            { word: '编程', pinyin: 'biān chéng' },
+            { word: '代码', pinyin: 'dài mǎ' },
+            { word: '漏洞', pinyin: 'lòu dòng' },
+            { word: '黑客', pinyin: 'hēi kè' },
+            { word: '白帽', pinyin: 'bái mào' },
+            { word: '红队', pinyin: 'hóng duì' },
+            { word: '蓝队', pinyin: 'lán duì' },
+            { word: '攻防', pinyin: 'gōng fáng' },
+            { word: '加密', pinyin: 'jiā mì' },
+            { word: '解密', pinyin: 'jiě mì' },
+            { word: '认证', pinyin: 'rèn zhèng' },
+            { word: '授权', pinyin: 'shòu quán' },
+            { word: '访问控制', pinyin: 'fǎng wèn kòng zhì' },
+            { word: '防火墙', pinyin: 'fáng huǒ qiáng' },
+            { word: '入侵检测', pinyin: 'rù qīn jiǎn cè' },
+            { word: '威胁情报', pinyin: 'wēi xié qíng bào' },
+            { word: '安全运营', pinyin: 'ān quán yùn yíng' },
+            { word: '应急响应', pinyin: 'yìng jí xiǎng yìng' },
+            { word: '灾难恢复', pinyin: 'zāi nàn huī fù' },
+            { word: '业务连续', pinyin: 'yè wù lián xù' },
+            { word: '风险管理', pinyin: 'fēng xiǎn guǎn lǐ' },
+            { word: '合规审计', pinyin: 'hé guī shěn jì' },
+            { word: '安全文化', pinyin: 'ān quán wén huà' },
+            { word: '智能革命', pinyin: 'zhì néng gé mìng' },
+            { word: '数字转型', pinyin: 'shù zì zhuǎn xíng' },
+            { word: '云端智能', pinyin: 'yún duān zhì néng' },
+            { word: '万物互联', pinyin: 'wàn wù hù lián' },
+            { word: '算法驱动', pinyin: 'suàn fǎ qū dòng' },
+            { word: '数据为王', pinyin: 'shù jù wéi wáng' },
+            { word: '场景落地', pinyin: 'chǎng jǐng luò dì' },
+            { word: '技术赋能', pinyin: 'jì shù fù néng' },
+            { word: '模式创新', pinyin: 'mó shì chuàng xīn' },
+            { word: '颠覆传统', pinyin: 'diān fù chuán tǒng' },
+            { word: '跨界融合', pinyin: 'kuà jiè róng hé' },
+            { word: '生态共建', pinyin: 'shēng tài gòng jiàn' },
+            { word: '开放协作', pinyin: 'kāi fàng xié zuò' },
+            { word: '敏捷开发', pinyin: 'mǐn jié kāi fā' },
+            { word: '持续集成', pinyin: 'chí xù jí chéng' },
+            { word: '持续交付', pinyin: 'chí xù jiāo fù' },
+            { word: '快速迭代', pinyin: 'kuài sù dié dài' },
+            { word: '用户至上', pinyin: 'yòng hù zhì shàng' },
+            { word: '体验为王', pinyin: 'tǐ yàn wéi wáng' },
+            { word: '产品思维', pinyin: 'chǎn pǐn sī wéi' },
+            { word: '增长黑客', pinyin: 'zēng zhǎng hēi kè' },
+            { word: '私域流量', pinyin: 'sī yù liú liàng' },
+            { word: '公域引流', pinyin: 'gōng yù yǐn liú' },
+            { word: '精准营销', pinyin: 'jīng zhǔn yíng xiāo' },
+            { word: '千人千面', pinyin: 'qiān rén qiān miàn' },
+            { word: '个性化推荐', pinyin: 'gè xìng huà tuī jiàn' },
+            { word: '智能客服', pinyin: 'zhì néng kè fú' },
+            { word: '无人零售', pinyin: 'wú rén líng shòu' },
+            { word: '智慧医疗', pinyin: 'zhì huì yī liáo' },
+            { word: '远程诊疗', pinyin: 'yuǎn chéng zhěn liáo' },
+            { word: '精准农业', pinyin: 'jīng zhǔn nóng yè' },
+            { word: '智能工厂', pinyin: 'zhì néng gōng chǎng' },
+            { word: '工业互联', pinyin: 'gōng yè hù lián' },
+            { word: '供应链金融', pinyin: 'gōng yìng liàn jīn róng' },
+            { word: '去中心化', pinyin: 'qù zhōng xīn huà' },
+            { word: '信任机器', pinyin: 'xìn rèn jī qì' },
+            { word: '代码即法', pinyin: 'dài mǎ jí fǎ' },
+            { word: '算力即权', pinyin: 'suàn lì jí quán' },
+            { word: '数据主权', pinyin: 'shù jù zhǔ quán' },
+            { word: '数字人权', pinyin: 'shù zì rén quán' },
+            { word: '云计算', pinyin: 'yún jì suàn' },
+            { word: '大数据', pinyin: 'dà shù jù' },
+            { word: '物联网', pinyin: 'wù lián wǎng' },
+            { word: '区块链', pinyin: 'qū kuài liàn' },
+            { word: '元宇宙', pinyin: 'yuán yǔ zhòu' },
+            { word: '数字人', pinyin: 'shù zì rén' },
+            { word: '智能体', pinyin: 'zhì néng tǐ' },
+            { word: '边缘端', pinyin: 'biān yuán duān' },
+            { word: '量子位', pinyin: 'liàng zǐ wèi' },
+            { word: '基因码', pinyin: 'jī yīn mǎ' },
+            { word: '脑接口', pinyin: 'nǎo jiē kǒu' },
+            { word: '虚拟币', pinyin: 'xū nǐ bì' },
+            { word: 'NFT', pinyin: 'NFT' },
+            { word: 'DeFi', pinyin: 'DeFi' },
+            { word: 'Web3', pinyin: 'Web3' },
+            { word: 'AI芯片', pinyin: 'AI xīn piàn' },
+            { word: '5G网', pinyin: '5G wǎng' },
+            { word: '6G星', pinyin: '6G xīng' },
+            { word: '碳中和', pinyin: 'tàn zhōng hé' },
+            { word: '太空站', pinyin: 'tài kōng zhàn' },
+            { word: '宪法', pinyin: 'xiàn fǎ' },
+            { word: '法律', pinyin: 'fǎ lǜ' },
+            { word: '法治', pinyin: 'fǎ zhì' },
+            { word: '政权', pinyin: 'zhèng quán' },
+            { word: '主权', pinyin: 'zhǔ quán' },
+            { word: '民主', pinyin: 'mín zhǔ' },
+            { word: '共和', pinyin: 'gòng hé' },
+            { word: '选举', pinyin: 'xuǎn jǔ' },
+            { word: '投票', pinyin: 'tóu piào' },
+            { word: '议会', pinyin: 'yì huì' },
+            { word: '国会', pinyin: 'guó huì' },
+            { word: '政府', pinyin: 'zhèng fǔ' },
+            { word: '行政', pinyin: 'xíng zhèng' },
+            { word: '立法', pinyin: 'lì fǎ' },
+            { word: '司法', pinyin: 'sī fǎ' },
+            { word: '监察', pinyin: 'jiān chá' },
+            { word: '审计', pinyin: 'shěn jì' },
+            { word: '政策', pinyin: 'zhèng cè' },
+            { word: '方针', pinyin: 'fāng zhēn' },
+            { word: '路线', pinyin: 'lù xiàn' },
+            { word: '纲领', pinyin: 'gāng lǐng' },
+            { word: '宣言', pinyin: 'xuān yán' },
+            { word: '章程', pinyin: 'zhāng chéng' },
+            { word: '条例', pinyin: 'tiáo lì' },
+            { word: '规章', pinyin: 'guī zhāng' },
+            { word: '制度', pinyin: 'zhì dù' },
+            { word: '体制', pinyin: 'tǐ zhì' },
+            { word: '改革', pinyin: 'gǎi gé' },
+            { word: '开放', pinyin: 'kāi fàng' },
+            { word: '发展', pinyin: 'fā zhǎn' },
+            { word: '稳定', pinyin: 'wěn dìng' },
+            { word: '和谐', pinyin: 'hé xié' },
+            { word: '统一', pinyin: 'tǒng yī' },
+            { word: '团结', pinyin: 'tuán jié' },
+            { word: '和平', pinyin: 'hé píng' },
+            { word: '战争', pinyin: 'zhàn zhēng' },
+            { word: '外交', pinyin: 'wài jiāo' },
+            { word: '国际', pinyin: 'guó jì' },
+            { word: '领土', pinyin: 'lǐng tǔ' },
+            { word: '领空', pinyin: 'lǐng kōng' },
+            { word: '领海', pinyin: 'lǐng hǎi' },
+            { word: '边界', pinyin: 'biān jiè' },
+            { word: '主权', pinyin: 'zhǔ quán' },
+            { word: '独立', pinyin: 'dú lì' },
+            { word: '自主', pinyin: 'zì zhǔ' },
+            { word: '平等', pinyin: 'píng děng' },
+            { word: '自由', pinyin: 'zì yóu' },
+            { word: '公正', pinyin: 'gōng zhèng' },
+            { word: '正义', pinyin: 'zhèng yì' },
+            { word: '公平', pinyin: 'gōng píng' },
+            { word: '权利', pinyin: 'quán lì' },
+            { word: '义务', pinyin: 'yì wù' },
+            { word: '公民', pinyin: 'gōng mín' },
+            { word: '国民', pinyin: 'guó mín' },
+            { word: '人民', pinyin: 'rén mín' },
+            { word: '群众', pinyin: 'qún zhòng' },
+            { word: '阶级', pinyin: 'jiē jí' },
+            { word: '阶层', pinyin: 'jiē céng' },
+            { word: '政党', pinyin: 'zhèng dǎng' },
+            { word: '党员', pinyin: 'dǎng yuán' },
+            { word: '领袖', pinyin: 'lǐng xiù' },
+            { word: '领导', pinyin: 'lǐng dǎo' },
+            { word: '干部', pinyin: 'gàn bù' },
+            { word: '官僚', pinyin: 'guān liáo' },
+            { word: '腐败', pinyin: 'fǔ bài' },
+            { word: '廉洁', pinyin: 'lián jié' },
+            { word: '廉政', pinyin: 'lián zhèng' },
+            { word: '监督', pinyin: 'jiān dū' },
+            { word: '问责', pinyin: 'wèn zé' },
+            { word: '透明', pinyin: 'tòu míng' },
+            { word: '公开', pinyin: 'gōng kāi' },
+            { word: '保密', pinyin: 'bǎo mì' },
+            { word: '安全', pinyin: 'ān quán' },
+            { word: '国防', pinyin: 'guó fáng' },
+            { word: '军队', pinyin: 'jūn duì' },
+            { word: '警察', pinyin: 'jǐng chá' },
+            { word: '情报', pinyin: 'qíng bào' },
+            { word: '间谍', pinyin: 'jiàn dié' },
+            { word: '反恐', pinyin: 'fǎn kǒng' },
+            { word: '维和', pinyin: 'wéi hé' },
+            { word: '制裁', pinyin: 'zhì cái' },
+            { word: '条约', pinyin: 'tiáo yuē' },
+            { word: '协议', pinyin: 'xié yì' },
+            { word: '盟约', pinyin: 'méng yuē' },
+            { word: '合作', pinyin: 'hé zuò' },
+            { word: '冲突', pinyin: 'chōng tū' },
+            { word: '谈判', pinyin: 'tán pàn' },
+            { word: '妥协', pinyin: 'tuǒ xié' },
+            { word: '对抗', pinyin: 'duì kàng' },
+            { word: '竞争', pinyin: 'jìng zhēng' },
+            { word: '霸权', pinyin: 'bà quán' },
+            { word: '多极', pinyin: 'duō jí' },
+            { word: '全球化', pinyin: 'quán qiú huà' },
+            { word: '区域化', pinyin: 'qū yù huà' },
+            { word: '一体化', pinyin: 'yī tǐ huà' },
+            { word: '民族', pinyin: 'mín zú' },
+            { word: '种族', pinyin: 'zhǒng zú' },
+            { word: '宗教', pinyin: 'zōng jiào' },
+            { word: '文化', pinyin: 'wén huà' },
+            { word: '意识形态', pinyin: 'yì shí xíng tài' }
+        ];
+
+        // 初始化3D场景
+        function init3DScene() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf5f5f5); // 灰白色背景，低饱和度
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                2000
+            );
+            camera.position.z = 900; // 调整镜头距离
+            
+            // 创建渲染器
+            const container = document.getElementById('three-container');
+            if (!container) {
+                console.error('three-container not found');
+                return;
+            }
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+            
+            // 添加环境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            // 添加点光源
+            const pointLight = new THREE.PointLight(0xffffff, 1, 1000);
+            pointLight.position.set(0, 0, 300);
+            scene.add(pointLight);
+            
+            // 创建主角球体（完全透明）
+            const heroGeometry = new THREE.SphereGeometry(35, 32, 32); // 缩小尺寸
+            const heroMaterial = new THREE.MeshBasicMaterial({
+                color: 0xd1d5db, // 浅灰色
+                transparent: true,
+                opacity: 0, // 完全透明
+                wireframe: false
+            });
+            heroSphere = new THREE.Mesh(heroGeometry, heroMaterial);
+            scene.add(heroSphere);
+            
+            // 不添加3D边框线，只保留2D HTML边框
+            // const edgesGeometry = new THREE.EdgesGeometry(heroGeometry);
+            // const edgesMaterial = new THREE.LineBasicMaterial({ 
+            //     color: 0x6b7280, // 深灰色边框
+            //     linewidth: 2 
+            // });
+            // const heroEdges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+            // heroSphere.add(heroEdges);
+            
+            // 立即渲染一帧，避免黑屏闪烁
+            renderer.render(scene, camera);
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', onWindowResize3D, false);
+        }
+        
+        // 窗口大小改变时调整3D场景
+        function onWindowResize3D() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // 清理3D场景
+        function cleanup3DScene() {
+            if (renderer) {
+                const container = document.getElementById('three-container');
+                if (container && renderer.domElement) {
+                    container.removeChild(renderer.domElement);
+                }
+                renderer.dispose();
+                renderer = null;
+            }
+            
+            // 清理所有敌人球体
+            enemySpheres.forEach(enemy => {
+                if (enemy.mesh) {
+                    scene.remove(enemy.mesh);
+                    enemy.mesh.geometry.dispose();
+                    enemy.mesh.material.dispose();
+                }
+            });
+            enemySpheres = [];
+            
+            // 清理所有文字标签
+            wordLabels.forEach(label => {
+                if (label.element && label.element.parentNode) {
+                    label.element.parentNode.removeChild(label.element);
+                }
+            });
+            wordLabels = [];
+            
+            scene = null;
+            camera = null;
+            heroSphere = null;
+            
+            window.removeEventListener('resize', onWindowResize3D);
+        }
+        
+        // 在球面上生成随机位置
+        function getRandomPositionOnSphere(radius) {
+            // 使用球坐标系生成均匀分布的点
+            const theta = Math.random() * Math.PI * 2; // 0 到 2π
+            const phi = Math.acos(2 * Math.random() - 1); // 0 到 π，确保均匀分布
+            
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.sin(phi) * Math.sin(theta);
+            const z = radius * Math.cos(phi);
+            
+            return { x, y, z };
+        }
+        
+        // 创建敌人球体
+        function createEnemySphere(word) {
+            const spawnRadius = 800; // 生成半径
+            const position = getRandomPositionOnSphere(spawnRadius);
+            
+            // 计算移动速度
+            const speeds = [9, 10, 11, 12, 13, 14, 15, 16];
+            const probabilities = [0.09, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16];
+            const rand = Math.random();
+            let cumulativeProb = 0;
+            let selectedSpeed = 15;
+            for (let i = 0; i < speeds.length; i++) {
+                cumulativeProb += probabilities[i];
+                if (rand < cumulativeProb) {
+                    selectedSpeed = speeds[i];
+                    break;
+                }
+            }
+            
+            // 根据速度选择不同的几何形状
+            let geometry;
+            const size = 20; // 基础尺寸
+            
+            if (selectedSpeed === 9 || selectedSpeed === 10) {
+                // 正四面体
+                geometry = new THREE.TetrahedronGeometry(size);
+            } else if (selectedSpeed === 11 || selectedSpeed === 12) {
+                // 正方体
+                geometry = new THREE.BoxGeometry(size * 1.5, size * 1.5, size * 1.5);
+            } else if (selectedSpeed === 13) {
+                // 正八面体
+                geometry = new THREE.OctahedronGeometry(size);
+            } else if (selectedSpeed === 14) {
+                // 正十二面体
+                geometry = new THREE.DodecahedronGeometry(size);
+            } else if (selectedSpeed === 15) {
+                // 正二十面体
+                geometry = new THREE.IcosahedronGeometry(size);
+            } else { // selectedSpeed === 16
+                // 球体
+                geometry = new THREE.SphereGeometry(size, 16, 16);
+            }
+            
+            const material = new THREE.MeshPhongMaterial({
+                color: 0xc08080, // 低饱和度红色
+                emissive: 0x805050, // 深红发光
+                shininess: 60
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(position.x, position.y, position.z);
+            
+            // 添加随机自转速度（每个轴都有随机的旋转速度）
+            mesh.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.04, // -0.02 到 0.02
+                y: (Math.random() - 0.5) * 0.04,
+                z: (Math.random() - 0.5) * 0.04
+            };
+            
+            scene.add(mesh);
+            
+            const duration = selectedSpeed * 1000; // 转换为毫秒
+            const speed = spawnRadius / (duration / 50); // 每50ms移动的距离
+            
+            // 创建文字标签
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'word-label-3d';
+            labelDiv.innerHTML = `
+                <div class="pinyin">${word.pinyin}</div>
+                <div class="word-text">${word.word}</div>
+            `;
+            document.body.appendChild(labelDiv);
+            
+            const enemy = {
+                id: word.id,
+                word: word.word,
+                pinyin: word.pinyin,
+                mesh: mesh,
+                label: labelDiv,
+                speed: speed,
+                speedType: selectedSpeed, // 保存速度类型用于计算伤害
+                x: position.x,
+                y: position.y,
+                z: position.z
+            };
+            
+            enemySpheres.push(enemy);
+            wordLabels.push({ id: word.id, element: labelDiv, enemy: enemy });
+            
+            return enemy;
+        }
+        
+        // 更新3D场景
+        function update3DScene() {
+            if (!scene || !camera || !renderer) return;
+            
+            // 移动敌人球体
+            enemySpheres = enemySpheres.map(enemy => {
+                // 检查是否正在传送
+                if (enemy.teleporting) {
+                    const elapsed = Date.now() - enemy.teleportStartTime;
+                    const duration = 500; // 0.5秒
+                    
+                    if (elapsed < duration) {
+                        // 正在传送中，使用缓动函数插值
+                        const t = elapsed / duration;
+                        // 使用easeInOutQuad缓动
+                        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                        
+                        enemy.x = enemy.startX + (enemy.targetX - enemy.startX) * eased;
+                        enemy.y = enemy.startY + (enemy.targetY - enemy.startY) * eased;
+                        enemy.z = enemy.startZ + (enemy.targetZ - enemy.startZ) * eased;
+                        
+                        enemy.mesh.position.set(enemy.x, enemy.y, enemy.z);
+                    } else {
+                        // 传送完成
+                        enemy.x = enemy.targetX;
+                        enemy.y = enemy.targetY;
+                        enemy.z = enemy.targetZ;
+                        enemy.mesh.position.set(enemy.x, enemy.y, enemy.z);
+                        
+                        // 清除传送标记
+                        enemy.teleporting = false;
+                        delete enemy.startX;
+                        delete enemy.startY;
+                        delete enemy.startZ;
+                        delete enemy.targetX;
+                        delete enemy.targetY;
+                        delete enemy.targetZ;
+                        delete enemy.teleportStartTime;
+                    }
+                    
+                    // 传送期间也更新自转
+                    if (enemy.mesh.rotationSpeed) {
+                        enemy.mesh.rotation.x += enemy.mesh.rotationSpeed.x;
+                        enemy.mesh.rotation.y += enemy.mesh.rotationSpeed.y;
+                        enemy.mesh.rotation.z += enemy.mesh.rotationSpeed.z;
+                    }
+                    
+                    return enemy;
+                }
+                
+                // 检查这个敌人是否被冻结
+                if (enemy.frozen) {
+                    // 冻结状态下不移动，但继续自转
+                    if (enemy.mesh.rotationSpeed) {
+                        enemy.mesh.rotation.x += enemy.mesh.rotationSpeed.x;
+                        enemy.mesh.rotation.y += enemy.mesh.rotationSpeed.y;
+                        enemy.mesh.rotation.z += enemy.mesh.rotationSpeed.z;
+                    }
+                    return enemy;
+                }
+                
+                // 计算指向中心的方向
+                const distance = Math.sqrt(enemy.x * enemy.x + enemy.y * enemy.y + enemy.z * enemy.z);
+                const dirX = -enemy.x / distance;
+                const dirY = -enemy.y / distance;
+                const dirZ = -enemy.z / distance;
+                
+                // 更新位置
+                enemy.x += dirX * enemy.speed;
+                enemy.y += dirY * enemy.speed;
+                enemy.z += dirZ * enemy.speed;
+                
+                enemy.mesh.position.set(enemy.x, enemy.y, enemy.z);
+                
+                // 更新自转
+                if (enemy.mesh.rotationSpeed) {
+                    enemy.mesh.rotation.x += enemy.mesh.rotationSpeed.x;
+                    enemy.mesh.rotation.y += enemy.mesh.rotationSpeed.y;
+                    enemy.mesh.rotation.z += enemy.mesh.rotationSpeed.z;
+                }
+                
+                // 检查敌人是否在相机后面（z > camera.position.z），如果是则移除（修复问题2）
+                if (enemy.z > camera.position.z) {
+                    // 敌人飞到相机后面了，移除
+                    movingWords = movingWords.filter(w => w.id !== enemy.id);
+                    scene.remove(enemy.mesh);
+                    enemy.mesh.geometry.dispose();
+                    enemy.mesh.material.dispose();
+                    if (enemy.label && enemy.label.parentNode) {
+                        enemy.label.parentNode.removeChild(enemy.label);
+                    }
+                    return null;
+                }
+                
+                // 检查碰撞（距离中心小于70）
+                const newDistance = Math.sqrt(enemy.x * enemy.x + enemy.y * enemy.y + enemy.z * enemy.z);
+                if (newDistance < 70) {
+                    // 碰撞逻辑
+                    if (shieldCount > 0) {
+                        shieldCount--;
+                        playSound(900, 0.15, 'triangle'); // 护盾被消耗的音效
+                        updateShieldDisplay();
+                    } else {
+                        // 根据敌人形状（速度类型）计算固定伤害
+                        let damage;
+                        if (enemy.speedType === 9 || enemy.speedType === 10) {
+                            damage = 5; // 正四面体：5点伤害
+                        } else if (enemy.speedType === 11 || enemy.speedType === 12) {
+                            damage = 6; // 正方体：6点伤害
+                        } else if (enemy.speedType === 13) {
+                            damage = 7; // 正八面体：7点伤害
+                        } else if (enemy.speedType === 14) {
+                            damage = 8; // 正十二面体：8点伤害
+                        } else if (enemy.speedType === 15) {
+                            damage = 9; // 正二十面体：9点伤害
+                        } else { // speedType === 16
+                            damage = 10; // 球体：10点伤害
+                        }
+                        
+                        health = Math.max(0, health - damage);
+                        playSound(200, 0.3, 'sawtooth'); // 敌人撞到主角的音效
+                        updateSurvivalHealth();
+                        
+                        if (health <= 0 && hasReviveArmor) {
+                            health = 20; // 复活甲触发时恢复至20点生命值
+                            hasReviveArmor = false;
+                            updateSurvivalHealth();
+                            playSound(1600, 0.4, 'square'); // 复活甲被消耗的音效
+                            updateReviveArmorDisplay();
+                        } else if (health <= 0) {
+                            // 游戏结束
+                            setTimeout(() => {
+                                gameState = 'finished';
+                                clearIntervals();
+                                document.removeEventListener('keydown', handleEscKey);
+                                window.removeEventListener('resize', handleWindowResizeWarning);
+                                cleanup3DScene();
+                                render();
+                            }, 100);
+                        }
+                    }
+                    
+                    // 从movingWords数组中移除（修复问题1：碰撞后仍能得分）
+                    movingWords = movingWords.filter(w => w.id !== enemy.id);
+                    
+                    // 移除这个敌人的3D对象
+                    scene.remove(enemy.mesh);
+                    enemy.mesh.geometry.dispose();
+                    enemy.mesh.material.dispose();
+                    if (enemy.label && enemy.label.parentNode) {
+                        enemy.label.parentNode.removeChild(enemy.label);
+                    }
+                    return null;
+                }
+                
+                return enemy;
+            }).filter(e => e !== null);
+            
+            // 更新文字标签位置（投影到屏幕空间）
+            wordLabels = wordLabels.filter(label => {
+                const enemy = enemySpheres.find(e => e.id === label.id);
+                if (!enemy) {
+                    if (label.element && label.element.parentNode) {
+                        label.element.parentNode.removeChild(label.element);
+                    }
+                    return false;
+                }
+                
+                // 将3D位置投影到2D屏幕坐标
+                const vector = new THREE.Vector3(enemy.x, enemy.y, enemy.z);
+                vector.project(camera);
+                
+                // 计算屏幕坐标
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+                
+                // 隐藏条件：
+                // 1. 在相机后面 (vector.z > 1)
+                // 2. 投影坐标超出视口范围（不使用边距，让自然超出的就隐藏）
+                const isOutOfView = x < 0 || x > window.innerWidth || 
+                                   y < 0 || y > window.innerHeight;
+                const isBehindCamera = vector.z > 1;
+                
+                if (isBehindCamera || isOutOfView) {
+                    label.element.style.display = 'none';
+                } else {
+                    label.element.style.display = 'block';
+                    label.element.style.left = x + 'px';
+                    label.element.style.top = y + 'px';
+                    label.element.style.transform = 'translate(-50%, -50%)';
+                    
+                    // 根据深度调整z-index
+                    const distanceToCenter = Math.sqrt(enemy.x * enemy.x + enemy.y * enemy.y + enemy.z * enemy.z);
+                    const maxDistance = 800; // 生成半径
+                    const minDistance = 100; // 接近中心
+                    
+                    const normalizedDistance = Math.max(0, Math.min(1, (distanceToCenter - minDistance) / (maxDistance - minDistance)));
+                    
+                    // 计算z-index：越近越高，但始终低于UI(z-index=20)
+                    // 距离100时z-index=15，距离800时z-index=2
+                    const zIndex = Math.floor(2 + (1 - normalizedDistance) * 13);
+                    label.element.style.zIndex = zIndex;
+                }
+                
+                return true;
+            });
+            
+            // 渲染场景
+            renderer.render(scene, camera);
+        }
+        
+        // 生成随机大招
+        function generateUltimate() {
+            const rand = Math.random();
+            if (rand < 0.3) { // 30%
+                currentUltimate = { word: '护盾', pinyin: 'hù dùn' };
+            } else if (rand < 0.7) { // 40%（从30%提升到40%）
+                currentUltimate = { word: '冻结', pinyin: 'dòng jié' };
+            } else if (rand < 0.8) { // 10%（从20%降到10%）
+                // 如果没有复活甲，给复活甲；否则给医疗包
+                if (!hasReviveArmor) {
+                    currentUltimate = { word: '复活甲', pinyin: 'fù huó jiǎ' };
+                } else {
+                    currentUltimate = { word: '医疗包', pinyin: 'yī liáo bāo' };
+                }
+            } else if (rand < 0.9) { // 10%
+                currentUltimate = { word: '物换星移', pinyin: 'wù huàn xīng yí' };
+            } else { // 10%
+                currentUltimate = { word: '命运审判', pinyin: 'mìng yùn shěn pàn' };
+            }
+            updateUltimateDisplay();
+        }
+        
+        // 执行大招效果
+        function activateUltimate(ultimateName) {
+            switch(ultimateName) {
+                case '护盾':
+                    if (shieldCount < 3) {
+                        shieldCount++;
+                        playSound(1000, 0.2, 'sine'); // 生成护盾的音效
+                        updateShieldDisplay(); // 只更新护盾显示
+                    }
+                    break;
+                    
+                case '冻结':
+                    // 只冻结当前存在的敌人
+                    if (enemySpheres.length > 0) {
+                        // 如果有旧的解冻计时器，先清除
+                        if (frozenTimeout) {
+                            clearTimeout(frozenTimeout);
+                            frozenTimeout = null;
+                        }
+                        
+                        // 记录被冻结的敌人ID
+                        const frozenEnemyIds = new Set(enemySpheres.map(e => e.id));
+                        
+                        // 将所有当前敌人变成冰蓝色并标记为冻结
+                        enemySpheres.forEach(enemy => {
+                            if (enemy.mesh && enemy.mesh.material) {
+                                enemy.mesh.material.color.setHex(0x6eb5ff); // 冰蓝色
+                                enemy.mesh.material.emissive.setHex(0x4a90e2); // 淡蓝色发光
+                                enemy.frozen = true; // 标记为冻结
+                            }
+                        });
+                        
+                        // 播放冻结音效
+                        playSound(800, 0.3, 'sine');
+                        setTimeout(() => playSound(600, 0.25, 'sine'), 100);
+                        setTimeout(() => playSound(400, 0.2, 'sine'), 200);
+                        
+                        // 3秒后解除冻结并恢复颜色
+                        frozenTimeout = setTimeout(() => {
+                            // 只恢复被冻结的敌人（通过ID识别）
+                            enemySpheres.forEach(enemy => {
+                                if (frozenEnemyIds.has(enemy.id) && enemy.mesh && enemy.mesh.material) {
+                                    enemy.mesh.material.color.setHex(0xc08080); // 低饱和度红色
+                                    enemy.mesh.material.emissive.setHex(0x805050); // 深红发光
+                                    enemy.frozen = false; // 解除冻结标记
+                                }
+                            });
+                            frozenTimeout = null; // 清除引用
+                        }, 3000);
+                    }
+                    // 如果没有敌人，大招浪费，不做任何事
+                    break;
+                    
+                case '医疗包':
+                    health = Math.min(100, health + 20); // 回复20点生命值，上限100
+                    updateSurvivalHealth();
+                    playSound(1200, 0.25, 'sine'); // 医疗包音效
+                    break;
+                    
+                case '复活甲':
+                    hasReviveArmor = true;
+                    playSound(1400, 0.3, 'square'); // 生成复活甲的音效
+                    updateReviveArmorDisplay(); // 只更新复活甲显示
+                    break;
+                    
+                case '物换星移':
+                    // 传送所有敌人到新位置
+                    enemySpheres.forEach(enemy => {
+                        // 如果敌人正在传送中，保持当前位置作为起点（平滑过渡）
+                        // 否则使用当前实际位置
+                        enemy.startX = enemy.x;
+                        enemy.startY = enemy.y;
+                        enemy.startZ = enemy.z;
+                        
+                        // 生成新的随机位置（在半径100-800之间的球面上）
+                        const minRadius = 100;
+                        const maxRadius = 800;
+                        const newRadius = minRadius + Math.random() * (maxRadius - minRadius);
+                        
+                        // 使用球坐标系生成均匀分布的点
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        
+                        enemy.targetX = newRadius * Math.sin(phi) * Math.cos(theta);
+                        enemy.targetY = newRadius * Math.sin(phi) * Math.sin(theta);
+                        enemy.targetZ = newRadius * Math.cos(phi);
+                        
+                        // 清除冻结状态（如果有）
+                        if (enemy.frozen) {
+                            enemy.frozen = false;
+                            // 恢复为红色
+                            if (enemy.mesh && enemy.mesh.material) {
+                                enemy.mesh.material.color.setHex(0xc08080); // 低饱和度红色
+                                enemy.mesh.material.emissive.setHex(0x805050); // 深红发光
+                            }
+                        }
+                        
+                        // 标记正在传送
+                        enemy.teleporting = true;
+                        enemy.teleportStartTime = Date.now();
+                    });
+                    
+                    // 播放传送音效
+                    playSound(1800, 0.4, 'sine');
+                    setTimeout(() => playSound(1600, 0.3, 'sine'), 150);
+                    setTimeout(() => playSound(2000, 0.2, 'sine'), 300);
+                    break;
+                    
+                case '命运审判':
+                    // 命运审判：必定消灭最近的敌人，其他敌人40%概率消灭
+                    if (enemySpheres.length > 0) {
+                        // 1. 找出离主角最近的敌人
+                        let closestEnemy = enemySpheres[0];
+                        let minDistance = Math.sqrt(closestEnemy.x * closestEnemy.x + 
+                                                    closestEnemy.y * closestEnemy.y + 
+                                                    closestEnemy.z * closestEnemy.z);
+                        
+                        enemySpheres.forEach(enemy => {
+                            const distance = Math.sqrt(enemy.x * enemy.x + 
+                                                       enemy.y * enemy.y + 
+                                                       enemy.z * enemy.z);
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                closestEnemy = enemy;
+                            }
+                        });
+                        
+                        // 2. 收集要消灭的敌人ID
+                        const toDestroyIds = new Set();
+                        
+                        // 最近的敌人必定消灭
+                        toDestroyIds.add(closestEnemy.id);
+                        
+                        // 其他敌人40%概率消灭（如果有其他敌人）
+                        if (enemySpheres.length > 1) {
+                            enemySpheres.forEach(enemy => {
+                                if (enemy.id !== closestEnemy.id) {
+                                    if (Math.random() < 0.4) { // 从0.5改为0.4
+                                        toDestroyIds.add(enemy.id);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 3. 清理被选中的敌人
+                        enemySpheres.forEach(enemy => {
+                            if (toDestroyIds.has(enemy.id)) {
+                                if (enemy.mesh) {
+                                    scene.remove(enemy.mesh);
+                                    enemy.mesh.geometry.dispose();
+                                    enemy.mesh.material.dispose();
+                                }
+                                if (enemy.label && enemy.label.parentNode) {
+                                    enemy.label.parentNode.removeChild(enemy.label);
+                                }
+                            }
+                        });
+                        
+                        // 4. 更新数组
+                        enemySpheres = enemySpheres.filter(e => !toDestroyIds.has(e.id));
+                        wordLabels = wordLabels.filter(l => !toDestroyIds.has(l.id));
+                        movingWords = movingWords.filter(w => !toDestroyIds.has(w.id));
+                    }
+                    // 如果没有敌人，大招浪费，不做任何事
+                    
+                    // 命运审判的音效（更神秘、威严）
+                    playSound(1500, 0.3, 'square');
+                    setTimeout(() => playSound(2000, 0.2, 'square'), 100);
+                    break;
+            }
+            
+            // 清除当前大招
+            currentUltimate = '';
+            updateUltimateDisplay();
+        }
+        
+        // 获取随机词组（确保最近100个不重复）
+        function getRandomWord(wordList) {
+            let attempts = 0;
+            while (attempts < 100) {
+                const randomIndex = Math.floor(Math.random() * wordList.length);
+                const word = wordList[randomIndex];
+                
+                if (!recentWords.includes(word.word)) {
+                    return word;
+                }
+                attempts++;
+            }
+            return wordList[Math.floor(Math.random() * wordList.length)];
+        }
+
+        // 更新最近词组列表
+        function updateRecentWords(word) {
+            recentWords.push(word);
+            if (recentWords.length > 100) {
+                recentWords = recentWords.slice(-100);
+            }
+        }
+
+        // 播放音效
+        function playSound(frequency, duration, type = 'sine') {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // 开始游戏
+        function startGame(mode) {
+            clearIntervals();
+            
+            gameMode = mode;
+            gameState = mode;
+            timeLeft = mode === 'endless' ? 0 : 60; // 无尽模式正计时从0开始
+            score = 0;
+            health = 100;
+            userInput = '';
+            movingWords = [];
+            elapsedTime = 0;
+            recentWords = [];
+            lastSpawnTime = 0;
+            wordsTyped = 0;
+            wordCount = 0;
+            ultimateCharge = 0; // 初始化大招充能
+            currentUltimate = ''; // 初始化当前大招
+            shieldCount = 0; // 初始化护盾
+            hasReviveArmor = false; // 初始化复活甲
+            frozenTimeout = null; // 初始化冻结计时器
+            
+            if (mode === 'timed') {
+                const word = getRandomWord(wordList);
+                currentWord = word;
+                updateRecentWords(word.word);
+            }
+            
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // 添加Esc键监听（仅无尽模式）
+            if (mode === 'endless') {
+                document.addEventListener('keydown', handleEscKey);
+                // 记录初始窗口大小
+                window.initialWidth = window.innerWidth;
+                window.initialHeight = window.innerHeight;
+                // 监听窗口大小改变
+                window.addEventListener('resize', handleWindowResizeWarning);
+            }
+            
+            // 先渲染DOM
+            render();
+            
+            // 无尽模式下，DOM创建后再初始化3D场景
+            if (mode === 'endless') {
+                init3DScene();
+            }
+            
+            startTimer();
+            if (mode === 'endless') {
+                startSpawning();
+                startMoving();
+            }
+        }
+        
+        // 处理窗口大小改变警告
+        function handleWindowResizeWarning() {
+            if (gameState !== 'endless') return;
+            
+            // 检测窗口大小是否真的改变了（排除移动浏览器地址栏显示/隐藏的影响）
+            const widthChanged = Math.abs(window.innerWidth - window.initialWidth) > 50;
+            const heightChanged = Math.abs(window.innerHeight - window.initialHeight) > 50;
+            
+            if (widthChanged || heightChanged) {
+                // 窗口大小改变，结束游戏
+                gameState = 'finished';
+                clearIntervals();
+                document.removeEventListener('keydown', handleEscKey);
+                window.removeEventListener('resize', handleWindowResizeWarning);
+                
+                // 显示警告消息
+                alert('检测到窗口大小改变，游戏已结束。');
+                render();
+            }
+        }
+        
+        // 处理Esc键
+        function handleEscKey(e) {
+            if (e.key === 'Escape' && gameState === 'endless') {
+                document.removeEventListener('keydown', handleEscKey);
+                backToHome();
+            }
+        }
+
+        // 清除所有计时器
+        function clearIntervals() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (spawnInterval) clearInterval(spawnInterval);
+            if (moveInterval) clearInterval(moveInterval);
+            if (frozenTimeout) {
+                clearTimeout(frozenTimeout);
+                frozenTimeout = null;
+            }
+        }
+
+        // 开始倒计时
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (gameState === 'timed' && timeLeft > 0 && health > 0) {
+                    timeLeft--;
+                    
+                    // 更新时间显示
+                    const timeDisplay = document.getElementById('timeDisplay');
+                    if (timeDisplay) timeDisplay.textContent = timeLeft;
+                    
+                    if (timeLeft === 0) {
+                        gameState = 'finished';
+                        clearIntervals();
+                        render();
+                    }
+                } else if (gameState === 'endless' && health > 0) {
+                    timeLeft++; // 无尽模式正计时
+                    elapsedTime++;
+                    
+                    // 更新时间显示
+                    const timeDisplay = document.querySelector('.top-center .stat-value');
+                    if (timeDisplay) {
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+
+        // 无尽模式：生成词组
+        function startSpawning() {
+            // 立即生成第一个词
+            spawnWord();
+            
+            spawnInterval = setInterval(() => {
+                if (gameState !== 'endless' || health <= 0) return;
+                
+                // 计算下一个词的生成时间间隔（秒）
+                let spawnIntervalTime;
+                if (wordCount === 0) {
+                    spawnIntervalTime = 0;
+                } else {
+                    // 第n个词的间隔 = 60 / (20 + (n-2)/10) 秒
+                    // n从2开始，wordCount从1开始，所以 n = wordCount + 1
+                    const n = wordCount + 1;
+                    spawnIntervalTime = 60 / (20 + (n - 2) / 10);
+                }
+                
+                const elapsed = timeLeft;
+                
+                if ((elapsed - lastSpawnTime) >= spawnIntervalTime) {
+                    spawnWord();
+                }
+            }, 100);
+        }
+        
+        // 生成单个词组
+        function spawnWord() {
+            if (movingWords.length >= 20) return;
+            
+            lastSpawnTime = timeLeft;
+            wordCount++;
+            
+            const existingWordTexts = movingWords.map(w => w.word);
+            let newWordData = wordList[Math.floor(Math.random() * wordList.length)];
+            let attempts = 0;
+            
+            while ((existingWordTexts.includes(newWordData.word) || recentWords.includes(newWordData.word)) && attempts < 30) {
+                newWordData = wordList[Math.floor(Math.random() * wordList.length)];
+                attempts++;
+            }
+            
+            recentWords.push(newWordData.word);
+            if (recentWords.length > 100) {
+                recentWords = recentWords.slice(-100);
+            }
+            
+            const newWord = {
+                ...newWordData,
+                id: Date.now() + Math.random()
+            };
+            
+            movingWords.push(newWord);
+            
+            // 创建3D敌人球体
+            createEnemySphere(newWord);
+        }
+
+        // 移动词组
+        function startMoving() {
+            moveInterval = setInterval(() => {
+                if (gameState === 'endless' && health > 0) {
+                    // 更新3D场景
+                    update3DScene();
+                }
+            }, 50);
+        }
+        
+        // 更新移动词组的位置（保留但不再使用）
+        function updateMovingWordsPosition() {
+            // 3D模式下不需要此函数，但保留以避免错误
+        }
+
+        // 处理输入
+        function handleInputChange(e) {
+            userInput = e.target.value;
+
+            if (gameState === 'timed') {
+                if (userInput === currentWord.word) {
+                    score += currentWord.word.length; // 按字数计分
+                    userInput = '';
+                    const newWord = getRandomWord(wordList);
+                    currentWord = newWord;
+                    updateRecentWords(newWord.word);
+                    e.target.value = '';
+                    // 只更新得分和词组显示，不重新渲染整个页面
+                    updateTimedDisplay();
+                }
+            } else if (gameState === 'endless') {
+                // 检查是否输入大招（不增加大招充能）
+                if (currentUltimate && userInput === currentUltimate.word) {
+                    userInput = '';
+                    e.target.value = '';
+                    activateUltimate(currentUltimate.word);
+                    return;
+                }
+                
+                const matchedWord = movingWords.find(w => w.word === userInput);
+                if (matchedWord) {
+                    // 不再回复生命值
+                    wordsTyped += matchedWord.word.length; // 记录输对的字数
+                    ultimateCharge += matchedWord.word.length; // 大招充能
+                    userInput = '';
+                    e.target.value = '';
+                    // 消灭敌人的音效
+                    playSound(800, 0.2, 'square');
+                    setTimeout(() => playSound(1200, 0.1, 'square'), 50);
+                    movingWords = movingWords.filter(w => w.id !== matchedWord.id);
+                    
+                    // 移除对应的3D球体和标签
+                    const enemy = enemySpheres.find(e => e.id === matchedWord.id);
+                    if (enemy) {
+                        scene.remove(enemy.mesh);
+                        enemy.mesh.geometry.dispose();
+                        enemy.mesh.material.dispose();
+                        if (enemy.label && enemy.label.parentNode) {
+                            enemy.label.parentNode.removeChild(enemy.label);
+                        }
+                        enemySpheres = enemySpheres.filter(e => e.id !== matchedWord.id);
+                        wordLabels = wordLabels.filter(l => l.id !== matchedWord.id);
+                    }
+                    
+                    // 不需要更新血量显示（因为血量没变）
+                    
+                    // 检查是否触发生成大招（充能>=20）
+                    if (ultimateCharge >= 20) {
+                        ultimateCharge = 0; // 充能清零
+                        generateUltimate(); // 生成新大招
+                    }
+                }
+            }
+        }
+        
+        // 更新限时计分模式显示
+        function updateTimedDisplay() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const pinyinDisplay = document.getElementById('pinyinDisplay');
+            const wordDisplay = document.getElementById('wordDisplay');
+            
+            if (timeDisplay) timeDisplay.textContent = timeLeft;
+            if (scoreDisplay) scoreDisplay.textContent = score;
+            if (pinyinDisplay) pinyinDisplay.textContent = currentWord.pinyin;
+            if (wordDisplay) wordDisplay.textContent = currentWord.word;
+        }
+        
+        // 更新生存模式血量显示
+        function updateSurvivalHealth() {
+            const healthDisplay = document.getElementById('healthDisplay');
+            if (healthDisplay) healthDisplay.textContent = health;
+        }
+        
+        // 更新护盾显示
+        function updateShieldDisplay() {
+            const container = document.querySelector('.shield-container');
+            if (shieldCount > 0) {
+                const shieldsHTML = Array(shieldCount).fill(0).map(() => `
+                    <div class="shield-icon">🛡️</div>
+                `).join('');
+                
+                if (container) {
+                    container.innerHTML = shieldsHTML;
+                } else {
+                    // 如果容器不存在，需要创建
+                    const mainContainer = document.querySelector('.relative.min-h-screen');
+                    if (mainContainer) {
+                        const shieldDiv = document.createElement('div');
+                        shieldDiv.className = 'shield-container';
+                        shieldDiv.innerHTML = shieldsHTML;
+                        mainContainer.appendChild(shieldDiv);
+                    }
+                }
+            } else {
+                // 没有护盾，移除容器
+                if (container) {
+                    container.remove();
+                }
+            }
+        }
+        
+        // 更新复活甲显示
+        function updateReviveArmorDisplay() {
+            const healthInner = document.querySelector('.health-inner');
+            if (healthInner) {
+                if (hasReviveArmor) {
+                    healthInner.classList.add('health-inner-revive');
+                } else {
+                    healthInner.classList.remove('health-inner-revive');
+                }
+            }
+        }
+        
+        // 更新大招显示
+        function updateUltimateDisplay() {
+            const ultimateDisplay = document.getElementById('ultimateDisplay');
+            if (ultimateDisplay) {
+                if (currentUltimate && currentUltimate.word) {
+                    // 移除所有大招颜色类
+                    ultimateDisplay.className = 'ultimate-display';
+                    
+                    // 根据大招类型添加对应的颜色类
+                    switch(currentUltimate.word) {
+                        case '护盾':
+                            ultimateDisplay.classList.add('ultimate-shield');
+                            break;
+                        case '冻结':
+                            ultimateDisplay.classList.add('ultimate-freeze');
+                            break;
+                        case '医疗包':
+                            ultimateDisplay.classList.add('ultimate-firstaid');
+                            break;
+                        case '复活甲':
+                            ultimateDisplay.classList.add('ultimate-revive');
+                            break;
+                        case '物换星移':
+                            ultimateDisplay.classList.add('ultimate-teleport');
+                            break;
+                        case '命运审判':
+                            ultimateDisplay.classList.add('ultimate-judgment');
+                            break;
+                    }
+                    
+                    ultimateDisplay.innerHTML = `
+                        <div class="pinyin" style="font-size: 0.875rem; margin-bottom: 0.25rem;">${currentUltimate.pinyin}</div>
+                        <div>${currentUltimate.word}</div>
+                    `;
+                    ultimateDisplay.style.display = 'block';
+                } else {
+                    ultimateDisplay.style.display = 'none';
+                    ultimateDisplay.className = 'ultimate-display'; // 清除颜色类
+                }
+            }
+        }
+
+        // 返回主界面
+        function backToHome() {
+            clearIntervals();
+            document.removeEventListener('keydown', handleEscKey); // 移除Esc键监听
+            window.removeEventListener('resize', handleWindowResizeWarning); // 移除resize监听
+            cleanup3DScene(); // 清理3D场景
+            gameState = 'home';
+            movingWords = [];
+            render();
+        }
+
+        // 渲染函数
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (gameState === 'home') {
+                app.innerHTML = `
+                    <div class="container bg-gradient-blue">
+                        <h1 class="title">打字训练</h1>
+                        
+                        <div class="flex-row">
+                            <div class="flex-col">
+                                <button onclick="startGame('timed')" class="btn btn-primary mb-4">
+                                    限时计分
+                                </button>
+                                <div class="card">
+                                    <p class="font-semibold">规则说明：</p>
+                                    <p>• 60秒内输入尽可能多的词组</p>
+                                    <p>• 每输对一个字得1分</p>
+                                    <p>• 词组包含2-4个字</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-col">
+                                <button onclick="startGame('endless')" class="btn btn-danger mb-4">
+                                    无尽模式
+                                </button>
+                                <div class="card">
+                                    <p class="font-semibold">规则说明：</p>
+                                    <p>• 词组从四面八方向中心移动</p>
+                                    <p>• 输入正确的词组使其消失</p>
+                                    <p>• 词组撞到中心会扣血（5-10点）</p>
+                                    <p>• 不同形状的敌人伤害不同</p>
+                                    <p>• 输对20字可获得随机大招</p>
+                                    <p>• 血量归零游戏结束</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (gameState === 'timed') {
+                app.innerHTML = `
+                    <div class="container bg-gradient-blue">
+                        <div class="game-container">
+                            <div class="stats">
+                                <div class="stat">
+                                    时间: <span class="stat-value" id="timeDisplay">${timeLeft}</span>秒
+                                </div>
+                                <div class="stat">
+                                    得分: <span class="stat-value" id="scoreDisplay">${score}</span>
+                                </div>
+                            </div>
+
+                            <div class="word-display">
+                                <div class="pinyin" id="pinyinDisplay">${currentWord.pinyin}</div>
+                                <div class="word" id="wordDisplay">${currentWord.word}</div>
+                            </div>
+
+                            <div class="input-wrapper">
+                                <input id="inputField" type="text" value="${userInput}" onpaste="return false" autocomplete="off" autofocus>
+                            </div>
+
+                            <div style="display: flex; justify-content: center;">
+                                <button onclick="backToHome()" class="btn btn-secondary">
+                                    返回
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const input = document.getElementById('inputField');
+                if (input) {
+                    input.addEventListener('input', handleInputChange);
+                    // 禁止粘贴作弊
+                    input.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        return false;
+                    });
+                    input.focus();
+                }
+            } else if (gameState === 'endless') {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                // 生成护盾图标HTML
+                const shieldsHTML = Array(shieldCount).fill(0).map(() => `
+                    <div class="shield-icon">🛡️</div>
+                `).join('');
+                
+                app.innerHTML = `
+                    <div class="relative min-h-screen bg-gradient-red overflow-hidden">
+                        <!-- 3D场景容器 -->
+                        <div id="three-container"></div>
+                        
+                        <div class="top-center">
+                            <div class="stat" style="color: #6b7280;">
+                                时间: <span class="stat-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                            </div>
+                        </div>
+                        
+                        ${shieldCount > 0 ? `<div class="shield-container">${shieldsHTML}</div>` : ''}
+
+                        <div class="fixed-center z-20">
+                            <div class="health-circle">
+                                <div class="health-inner ${hasReviveArmor ? 'health-inner-revive' : ''}">
+                                    <span class="health-value" id="healthDisplay">${health}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-top-below z-20">
+                            <input id="inputField" type="text" value="${userInput}" class="survival-input" onpaste="return false" autocomplete="off" autofocus>
+                        </div>
+                        
+                        <div id="ultimateDisplay" class="ultimate-display" style="display: ${currentUltimate && currentUltimate.word ? 'block' : 'none'};">
+                            ${currentUltimate && currentUltimate.word ? `
+                                <div class="pinyin" style="font-size: 0.875rem; margin-bottom: 0.25rem;">${currentUltimate.pinyin}</div>
+                                <div>${currentUltimate.word}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                const input = document.getElementById('inputField');
+                if (input) {
+                    input.addEventListener('input', handleInputChange);
+                    // 禁止粘贴作弊
+                    input.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        return false;
+                    });
+                    input.focus();
+                }
+            } else if (gameState === 'finished') {
+                let isVictory = false;
+                let message = '';
+                let survivedTime, minutes, seconds, timeString;
+                
+                if (gameMode === 'timed') {
+                    survivedTime = 60 - timeLeft;
+                    minutes = Math.floor(survivedTime / 60);
+                    seconds = survivedTime % 60;
+                    timeString = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    isVictory = timeLeft === 0;
+                    message = '时间到！';
+                } else if (gameMode === 'endless') {
+                    // 无尽模式显示坚持时间和平均速度
+                    survivedTime = timeLeft; // 正计时，timeLeft就是坚持的秒数
+                    minutes = Math.floor(survivedTime / 60);
+                    seconds = survivedTime % 60;
+                    timeString = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    const avgSpeed = survivedTime > 0 ? Math.round(wordsTyped / (survivedTime / 60)) : 0;
+                    message = '游戏结束';
+                }
+                
+                const color = isVictory ? '#10b981' : '#ef4444';
+                
+                app.innerHTML = `
+                    <div class="result-container bg-gradient-blue">
+                        <div class="result-card">
+                            <h2 class="result-title" style="color: ${color};">
+                                ${message}
+                            </h2>
+                            ${gameMode === 'timed' ? `
+                                <div class="result-score" style="color: #4f46e5;">${score} 分</div>
+                                ${!isVictory ? `<div class="result-time">用时: ${timeString}</div>` : ''}
+                            ` : ''}
+                            ${gameMode === 'endless' ? `
+                                <div class="result-score" style="color: ${color};">
+                                    ${Math.round(wordsTyped / (survivedTime / 60))} 字/分钟
+                                </div>
+                                <div class="result-time">坚持时间: ${timeString}</div>
+                            ` : ''}
+                            <button onclick="backToHome()" class="btn btn-primary">
+                                确定
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 初始渲染
+        render();
+    </script>
+</body>
+</html>
