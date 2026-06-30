@@ -55,3 +55,7 @@
 - **音效**：所有音效通过浏览器原生的 Web Audio API 实时合成，没有使用任何外部音频文件
 - **字体**：界面正文使用 Google Fonts 的 Noto Sans SC（字重400），拼音部分单独使用 Inter 字体，以获得更清晰的字母显示效果
 - **兼容性**：针对 iOS 触屏设备做了专门的事件处理优化，避免触摸操作导致的交互失灵问题。注意：不兼容手机，请勿在手机上玩此游戏。
+
+## License
+ 
+MIT — see [LICENSE](LICENSE) for details.
