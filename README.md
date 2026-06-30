@@ -1,6 +1,6 @@
 # 中文打字训练
 
-一个无需安装、单文件运行的中文打字练习小游戏。打开 [中文打字游戏](https://tengyanhaiin-star.github.io/Chinese-Typing-Game/) 即可开始，仅支持电脑浏览器。
+一个无需安装、单文件运行的中文打字练习小游戏。打开 [中文打字游戏](https://tengyanhaiin-star.github.io/Chinese-Typing-Game/) 即可开始，支持电脑浏览器。
 
 ## 这是什么
 
