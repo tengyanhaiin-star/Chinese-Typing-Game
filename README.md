@@ -54,7 +54,7 @@
 - **词库**：5000 个词组（2 字词、4 字成语及少量更长词条），位于 [`words.js`](words.js)
 - **3D 渲染**：无尽模式的场景使用 [Three.js](https://threejs.org/)（r128）搭建，敌人模型使用 Three.js 内置的多面体几何体（四面体、立方体、八面体、十二面体、二十面体、球体）
 - **音效**：所有音效通过浏览器原生的 Web Audio API 实时合成，没有使用任何外部音频文件
-- **字体**：界面正文使用 Google Fonts 的 Noto Sans SC（字重400）
+- **字体**：界面正文使用 Google Fonts 的 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（字重400）
 - **兼容性**：针对 iOS 触屏设备做了专门的事件处理优化，避免触摸操作导致的交互失灵问题。注意：不兼容手机，请勿在手机上玩此游戏
 
 ## License
